@@ -1,18 +1,16 @@
-/* =========================================
+/* =====================================================
    ADLI FX INTEL INDICATOR
-   PROJECT CONFIGURATION
-========================================= */
+   CONFIGURATION V1.0
+===================================================== */
 
 window.ADLI_CONFIG = {
 
+    // APPLICATION
     APP_NAME: "ADLI FX INTEL INDICATOR",
-
+    APP_SHORT_NAME: "ADLI FX",
     APP_VERSION: "1.0.0",
 
-    SUPABASE_URL: "YOUR_SUPABASE_PROJECT_URL",
-
-    SUPABASE_KEY: "YOUR_SUPABASE_PUBLISHABLE_KEY",
-
+    // MARKET
     DEFAULT_SYMBOL: "XAUUSD",
 
     TIMEFRAMES: [
@@ -25,13 +23,56 @@ window.ADLI_CONFIG = {
         "1d"
     ],
 
+    // SUPABASE
+    SUPABASE_URL: "YOUR_SUPABASE_PROJECT_URL",
+
+    SUPABASE_KEY: "YOUR_SUPABASE_PUBLISHABLE_KEY",
+
+    // MARKET DATA
+    MARKET_PROVIDER: "TWELVE_DATA",
+
+    MARKET_DATA_ENABLED: false,
+
+    // DASHBOARD
+    DASHBOARD: {
+        DEFAULT_TIMEFRAME: "5m",
+        SHOW_WATERMARK: true,
+        SHOW_MTF: true,
+        SHOW_SIGNALS: true,
+        SHOW_TRADE_LEVELS: true
+    },
+
+    // ANALYSIS
+    ANALYSIS: {
+        CONFIRMED_CANDLE_ONLY: true,
+        SIGNAL_COOLDOWN_BARS: 8,
+        SHOW_BOS: true,
+        SHOW_CHOCH: true,
+        SHOW_FVG: true,
+        SHOW_ORDER_BLOCK: true,
+        SHOW_LIQUIDITY_SWEEP: true
+    },
+
+    // DESIGN
     THEME: {
-        background: "#070B13",
-        panel: "#101827",
-        gold: "#D9B45B",
-        buy: "#00C087",
-        sell: "#F6465D",
-        text: "#F5F5F5"
+        BACKGROUND: "#080c14",
+        PANEL: "#101827",
+        GOLD: "#d9b45b",
+        GOLD_LIGHT: "#f0d28b",
+        BUY: "#00c087",
+        SELL: "#f6465d",
+        TEXT: "#f3f5f8",
+        MUTED: "#8492a6"
+    },
+
+    // SECURITY
+    SECURITY: {
+        REQUIRE_LOGIN: true,
+        REQUIRE_ACTIVE_SUBSCRIPTION: true,
+        ALLOW_PREVIEW_MODE: false
     }
 
 };
+
+// PREVENT ACCIDENTAL CONFIG REPLACEMENT
+Object.freeze(window.ADLI_CONFIG);
