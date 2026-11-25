@@ -1,1 +1,16 @@
-
+{
+  "name": "ADLI FX",
+  "short_name": "ADLI FX",
+  "start_url": "/AdliFX/",
+  "scope": "/AdliFX/",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "icons": [
+    {
+      "src": "https://freemirr-wq.github.io/AdliFX/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
