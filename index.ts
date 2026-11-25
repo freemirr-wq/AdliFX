@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080c14">
+
+<title>ADLI FX INTEL INDICATOR</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+:root {
+    --bg:#080c14;
+    --panel:#101827;
+    --panel2:#151f30;
+    --gold:#d9b45b;
+    --gold2:#f0d28b;
+    --green:#00c087;
+    --red:#f6465d;
+    --text:#f3f5f8;
+    --muted:#8492a6;
+    --border:#263247;
+}
+
+* {box-sizing:border-box}
+
+body {
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Arial,sans-serif;
+}
+
+button,input,select {
+    font:inherit;
+}
+
+button {
+    cursor:pointer;
+}
+
+.hidden {display:none!important}
+
+/* LOGIN */
+
+#authScreen {
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:
+      radial-gradient(circle at top,#1b2637 0%,#080c14 60%);
+}
+
+.auth-card {
+    width:100%;
+    max-width:420px;
+    padding:30px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:0 20px 60px #0008;
+}
+
+.logo {
+    text-align:center;
+    color:var(--gold);
+    font-size:25px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+.logo-sub {
+    text-align:center;
+    color:var(--muted);
+    font-size:11px;
+    letter-spacing:4px;
+    margin:8px 0 28px;
+}
+
+.auth-card h2 {
+    text-align:center;
+    font-size:20px;
+}
+
+.field {
+    margin:14px 0;
+}
+
+.field label {
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:7px;
+}
+
+.field input {
+    width:100%;
+    padding:13px;
+    color:white;
+    background:#080e19;
+    border:1px solid var(--border);
+    border-radius:9px;
+    outline:none;
+}
+
+.field input:focus {
+    border-color:var(--gold);
+}
+
+.primary-btn {
+    width:100%;
+    padding:14px;
+    border:0;
+    border-radius:9px;
+    background:var(--gold);
+    color:#111;
+    font-weight:bold;
+    margin-top:12px;
+}
+
+.switch-auth {
+    text-align:center;
+    margin-top:20px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.switch-auth span {
+    color:var(--gold);
+    cursor:pointer;
+}
+
+#authMessage {
+    margin-top:12px;
+    font-size:12px;
+    text-align:center;
+    color:var(--gold2);
+    line-height:1.5;
+}
+
+/* APPLICATION */
+
+#application {
+    display:none;
+    min-height:100vh;
+}
+
+.layout {
+    display:flex;
+    min-height:100vh;
+}
+
+.sidebar {
+    width:235px;
+    flex-shrink:0;
+    background:#0c1320;
+    border-right:1px solid var(--border);
+    padding:22px 15px;
+}
+
+.brand {
+    padding:5px 10px 28px;
+}
+
+.brand strong {
+    color:var(--gold);
+    font-size:19px;
+    letter-spacing:1px;
+}
+
+.brand small {
+    display:block;
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:3px;
+    margin-top:6px;
+}
+
+.nav-label {
+    color:#64748b;
+    font-size:10px;
+    letter-spacing:2px;
+    padding:15px 10px 8px;
+}
+
+.nav-btn {
+    display:block;
+    width:100%;
+    padding:12px;
+    margin:4px 0;
+    text-align:left;
+    border:0;
+    border-radius:8px;
+    background:transparent;
+    color:#aab5c5;
+    font-size:13px;
+}
+
+.nav-btn.active,
+.nav-btn:hover {
+    background:#1d293b;
+    color:var(--gold);
+}
+
+.main {
+    min-width:0;
+    flex:1;
+    padding:22px;
+}
+
+.topbar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:25px;
+}
+
+.topbar h2 {
+    font-size:19px;
+    margin:0;
+}
+
+.top-right {
+    display:flex;
+    gap:12px;
+    align-items:center;
+}
+
+.status {
+    color:var(--green);
+    font-size:11px;
+}
+
+.user-email {
+    color:var(--muted);
+    font-size:11px;
+}
+
+.logout {
+    background:#222e40;
+    color:#ddd;
+    border:1px solid var(--border);
+    padding:9px 12px;
+    border-radius:7px;
+    font-size:11px;
+}
+
+.page {display:none}
+.page.active {display:block}
+
+.section-title {
+    font-size:17px;
+    margin:0 0 16px;
+}
+
+.stats {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:13px;
+    margin-bottom:17px;
+}
+
+.stat-card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:17px;
+    border-radius:12px;
+    min-width:0;
+}
+
+.stat-card small {
+    color:var(--muted);
+    font-size:11px;
+}
+
+.stat-card strong {
+    display:block;
+    margin-top:12px;
+    font-size:19px;
+    overflow-wrap:anywhere;
+}
+
+.gold {color:var(--gold)}
+.green {color:var(--green)}
+.red {color:var(--red)}
+
+.panel {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:17px;
+    margin-bottom:16px;
+}
+
+.panel-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.panel-head h3 {
+    margin:0;
+    font-size:14px;
+}
+
+.chart-toolbar {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+}
+
+.tf-btn {
+    background:#1a2638;
+    border:1px solid var(--border);
+    color:#aab5c5;
+    border-radius:6px;
+    padding:7px 10px;
+    font-size:11px;
+}
+
+.tf-btn.active {
+    color:#111;
+    background:var(--gold);
+    border-color:var(--gold);
+}
+
+#priceChart {
+    width:100%;
+    height:340px;
+    position:relative;
+}
+
+.chart-empty {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    pointer-events:none;
+}
+
+.chart-watermark {
+    position:absolute;
+    top:42%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    color:#d9b45b18;
+    font-size:30px;
+    font-weight:900;
+    letter-spacing:5px;
+    pointer-events:none;
+    white-space:nowrap;
+}
+
+.grid-two {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+
+.data-row {
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+    font-size:12px;
+}
+
+.data-row:last-child {border:0}
+
+.data-row span:first-child {color:var(--muted)}
+
+.feature-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+}
+
+.feature {
+    background:var(--panel2);
+    padding:17px;
+    border-radius:9px;
+    border:1px solid var(--border);
+}
+
+.feature strong {
+    display:block;
+    color:var(--gold);
+    font-size:13px;
+    margin-bottom:8px;
+}
+
+.feature small {
+    color:var(--muted);
+    font-size:11px;
+}
+
+.notice {
+    padding:13px;
+    background:#172234;
+    color:var(--muted);
+    border-radius:8px;
+    font-size:11px;
+    line-height:1.6;
+}
+
+.planner-grid {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.planner-grid label {
+    color:var(--muted);
+    font-size:11px;
+}
+
+.planner-grid input {
+    display:block;
+    width:100%;
+    margin-top:7px;
+    padding:12px;
+    color:white;
+    background:#080e19;
+    border:1px solid var(--border);
+    border-radius:8px;
+}
+
+.result {
+    margin-top:15px;
+    padding:15px;
+    background:#172234;
+    border-radius:8px;
+    color:var(--gold);
+    font-size:13px;
+}
+
+.mobile-menu {
+    display:none;
+    background:#1a2638;
+    color:white;
+    border:1px solid var(--border);
+    padding:8px 12px;
+    border-radius:7px;
+}
+
+/* MOBILE */
+
+@media(max-width:900px) {
+    .sidebar {
+        position:fixed;
+        z-index:20;
+        left:-250px;
+        top:0;
+        bottom:0;
+        transition:.25s;
+    }
+
+    .sidebar.open {left:0}
+
+    .mobile-menu {display:block}
+
+    .main {padding:15px}
+
+    .stats {grid-template-columns:repeat(2,1fr)}
+
+    .grid-two {grid-template-columns:1fr}
+
+    .feature-grid {grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:480px) {
+    .topbar h2 {font-size:15px}
+    .user-email {display:none}
+    .stat-card {padding:13px}
+    .stat-card strong {font-size:16px}
+    #priceChart {height:280px}
+    .auth-card {padding:23px}
+    .feature-grid {grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN / REGISTER -->
+
+<section id="authScreen">
+<div class="auth-card">
+
+    <div class="logo">ADLI FX</div>
+    <div class="logo-sub">INTEL INDICATOR</div>
+
+    <h2 id="authTitle">Member Login</h2>
+
+    <form id="authForm">
+
+        <div class="field hidden" id="nameField">
+            <label>Full Name</label>
+            <input id="fullName" type="text" autocomplete="name">
+        </div>
+
+        <div class="field hidden" id="phoneField">
+            <label>Phone Number</label>
+            <input id="phone" type="tel" autocomplete="tel">
+        </div>
+
+        <div class="field">
+            <label>Email Address</label>
+            <input id="email" type="email" required autocomplete="email">
+        </div>
+
+        <div class="field">
+            <label>Password</label>
+            <input id="password" type="password" required minlength="6" autocomplete="current-password">
+        </div>
+
+        <button class="primary-btn" id="authSubmit" type="submit">
+            LOGIN
+        </button>
+
+    </form>
+
+    <div class="switch-auth">
+        <span id="switchText">Create new account</span>
+    </div>
+
+    <div id="authMessage"></div>
+
+</div>
+</section>
+
+<!-- APPLICATION -->
+
+<section id="application">
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+        <strong>ADLI FX</strong>
+        <small>INTEL INDICATOR</small>
+    </div>
+
+    <div class="nav-label">MAIN MENU</div>
+
+    <button class="nav-btn active" data-page="overview">◈ Overview</button>
+    <button class="nav-btn" data-page="analysis">⌁ Market Analysis</button>
+    <button class="nav-btn" data-page="history">▤ Signal History</button>
+    <button class="nav-btn" data-page="planner">◉ Trade Planner</button>
+
+    <div class="nav-label">SYSTEM</div>
+
+    <button class="nav-btn" data-page="settings">⚙ Settings</button>
+
+</aside>
+
+<main class="main">
+
+    <header class="topbar">
+
+        <div style="display:flex;align-items:center;gap:10px">
+            <button class="mobile-menu" id="menuButton">☰</button>
+            <h2 id="pageTitle">Overview</h2>
+        </div>
+
+        <div class="top-right">
+            <span class="status">● SYSTEM ONLINE</span>
+            <span class="user-email" id="userEmail"></span>
+            <button class="logout" id="logoutButton">LOGOUT</button>
+        </div>
+
+    </header>
+
+    <!-- OVERVIEW -->
+
+    <section class="page active" id="overview">
+
+        <div class="stats">
+
+            <div class="stat-card">
+                <small>TRADING SYMBOL</small>
+                <strong class="gold">XAUUSD</strong>
+            </div>
+
+            <div class="stat-card">
+                <small>MARKET PRICE</small>
+                <strong id="goldPrice">--</strong>
+            </div>
+
+            <div class="stat-card">
+                <small>MARKET TREND</small>
+                <strong id="marketTrend">WAITING</strong>
+            </div>
+
+            <div class="stat-card">
+                <small>DATA STATUS</small>
+                <strong id="dataStatus">NO FEED</strong>
+            </div>
+
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-head">
+                <h3>XAUUSD LIVE CHART</h3>
+                <div class="chart-toolbar">
+                    <button class="tf-btn" data-tf="1m">M1</button>
+                    <button class="tf-btn active" data-tf="5m">M5</button>
+                    <button class="tf-btn" data-tf="15m">M15</button>
+                    <button class="tf-btn" data-tf="30m">M30</button>
+                    <button class="tf-btn" data-tf="1h">H1</button>
+                    <button class="tf-btn" data-tf="4h">H4</button>
+                    <button class="tf-btn" data-tf="1d">D1</button>
+                </div>
+            </div>
+
+            <div id="priceChart">
+                <div class="chart-watermark">ADLI FX</div>
+                <div class="chart-empty" id="chartEmpty">
+                    Waiting for verified market data feed
+                </div>
+            </div>
+
+        </div>
+
+        <div class="grid-two">
+
+            <div class="panel">
+                <h3 class="section-title">AI MARKET ANALYSIS</h3>
+
+                <div class="data-row">
+                    <span>Market Structure</span>
+                    <strong id="structure">--</strong>
+                </div>
+
+                <div class="data-row">
+                    <span>Liquidity Sweep</span>
+                    <strong id="liquidity">--</strong>
+                </div>
+
+                <div class="data-row">
+                    <span>Fair Value Gap</span>
+                    <strong id="fvg">--</strong>
+                </div>
+
+                <div class="data-row">
+                    <span>Order Block</span>
+                    <strong id="orderBlock">--</strong>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="section-title">TRADE LEVELS</h3>
+
+                <div class="data-row">
+                    <span>Entry</span>
+                    <strong id="entry">--</strong>
+                </div>
+
+                <div class="data-row">
+                    <span>Stop Loss</span>
+                    <strong id="stopLoss">--</strong>
+                </div>
+
+                <div class="data-row">
+                    <span>Take Profit 1</span>
+                    <strong id="tp1">--</strong>
+                </div>
+
+                <div class="data-row">
+                    <span>Take Profit 2</span>
+                    <strong id="tp2">--</strong>
+                </div>
+
+                <div class="data-row">
+                    <span>Take Profit 3</span>
+                    <strong id="tp3">--</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="notice">
+            ADLI FX INTEL INDICATOR is waiting for a verified market data
+            connection. No simulated prices or fabricated trading signals
+            are displayed.
+        </div>
+
+    </section>
+
+    <!-- MARKET ANALYSIS -->
+
+    <section class="page" id="analysis">
+
+        <h3 class="section-title">SMART MONEY CONCEPTS</h3>
+
+        <div class="feature-grid">
+
+            <div class="feature">
+                <strong>BOS</strong>
+                <small>Break of Structure</small>
+            </div>
+
+            <div class="feature">
+                <strong>CHoCH</strong>
+                <small>Change of Character</small>
+            </div>
+
+            <div class="feature">
+                <strong>FVG</strong>
+                <small>Fair Value Gap</small>
+            </div>
+
+            <div class="feature">
+                <strong>ORDER BLOCK</strong>
+                <small>Institutional price zone</small>
+            </div>
+
+            <div class="feature">
+                <strong>LIQUIDITY</strong>
+                <small>Liquidity sweep analysis</small>
+            </div>
+
+            <div class="feature">
+                <strong>PREMIUM / DISCOUNT</strong>
+                <small>Market range positioning</small>
+            </div>
+
+        </div>
+
+        <div class="panel" style="margin-top:16px">
+            <h3 class="section-title">MULTI TIMEFRAME ANALYSIS</h3>
+
+            <div class="data-row"><span>M1</span><strong>WAITING FOR DATA</strong></div>
+            <div class="data-row"><span>M5</span><strong>WAITING FOR DATA</strong></div>
+            <div class="data-row"><span>M15</span><strong>WAITING FOR DATA</strong></div>
+            <div class="data-row"><span>M30</span><strong>WAITING FOR DATA</strong></div>
+            <div class="data-row"><span>H1</span><strong>WAITING FOR DATA</strong></div>
+            <div class="data-row"><span>H4</span><strong>WAITING FOR DATA</strong></div>
+            <div class="data-row"><span>D1</span><strong>WAITING FOR DATA</strong></div>
+        </div>
+
+    </section>
+
+    <!-- SIGNAL HISTORY -->
+
+    <section class="page" id="history">
+
+        <div class="panel">
+            <h3 class="section-title">SIGNAL HISTORY</h3>
+
+            <div class="notice">
+                No verified signal records available yet.
+                Signal history will appear here after the backend
+                signal service is connected.
+            </div>
+        </div>
+
+    </section>
+
+    <!-- TRADE PLANNER -->
+
+    <section class="page" id="planner">
+
+        <div class="panel">
+
+            <h3 class="section-title">RISK BUDGET CALCULATOR</h3>
+
+            <div class="planner-grid">
+
+                <div>
+                    <label>Account Balance</label>
+                    <input type="number" id="balance" value="1000" min="0">
+                </div>
+
+                <div>
+                    <label>Risk Percentage (%)</label>
+                    <input type="number" id="risk" value="1" min="0" max="100" step="0.1">
+                </div>
+
+            </div>
+
+            <button class="primary-btn" id="calculateRisk">
+                CALCULATE RISK BUDGET
+            </button>
+
+            <div class="result" id="riskResult">
+                Enter values to calculate a hypothetical risk budget.
+            </div>
+
+            <div class="notice" style="margin-top:15px">
+                This tool calculates a hypothetical risk budget only.
+                It does not calculate broker-specific lot sizes or recommend trades.
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- SETTINGS -->
+
+    <section class="page" id="settings">
+
+        <div class="panel">
+            <h3 class="section-title">ACCOUNT SETTINGS</h3>
+
+            <div class="data-row">
+                <span>Application</span>
+                <strong>ADLI FX INTEL INDICATOR</strong>
+            </div>
+
+            <div class="data-row">
+                <span>Market</span>
+                <strong>XAUUSD</strong>
+            </div>
+
+            <div class="data-row">
+                <span>Account</span>
+                <strong id="settingsEmail">--</strong>
+            </div>
+
+            <div class="data-row">
+                <span>Subscription</span>
+                <strong id="subscriptionStatus">CHECKING</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+</div>
+</section>
+
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="app.js"></script>
+
+<script>
+(function() {
+"use strict";
+
+const authScreen = document.getElementById("authScreen");
+const application = document.getElementById("application");
+const authForm = document.getElementById("authForm");
+const authMessage = document.getElementById("authMessage");
+
+let registerMode = false;
+
+function message(text) {
+    authMessage.textContent = text;
+}
+
+function showLogin() {
+    authScreen.style.display = "flex";
+    application.style.display = "none";
+}
+
+function showApplication(user) {
+    authScreen.style.display = "none";
+    application.style.display = "block";
+
+    document.getElementById("userEmail").textContent =
+        user.email || "";
+
+    document.getElementById("settingsEmail").textContent =
+        user.email || "";
+}
+
+document.getElementById("switchText").addEventListener("click", () => {
+    registerMode = !registerMode;
+
+    document.getElementById("authTitle").textContent =
+        registerMode ? "Create Account" : "Member Login";
+
+    document.getElementById("authSubmit").textContent =
+        registerMode ? "REGISTER" : "LOGIN";
+
+    document.getElementById("nameField").classList.toggle("hidden", !registerMode);
+    document.getElementById("phoneField").classList.toggle("hidden", !registerMode);
+
+    document.getElementById("switchText").textContent =
+        registerMode ? "Back to login" : "Create new account";
+
+    document.getElementById("fullName").required = registerMode;
+    document.getElementById("phone").required = registerMode;
+
+    message("");
+});
+
+authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!window.ADLI_AUTH) {
+        message("Authentication is not configured. Check Supabase settings.");
+        return;
+    }
+
+    const button = document.getElementById("authSubmit");
+    button.disabled = true;
+    button.textContent = "PLEASE WAIT...";
+
+    try {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        if (registerMode) {
+            const name = document.getElementById("fullName").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+
+            const result = await ADLI_AUTH.register(
+                name, phone, email, password
+            );
+
+            if (result.session) {
+                message("Registration successful. Checking account...");
+                await checkAccount(result.user);
+            } else {
+                message("Registration submitted. Check your email to confirm your account before logging in.");
+            }
+
+        } else {
+            const result = await ADLI_AUTH.login(email, password);
+            await checkAccount(result.user);
+        }
+
+    } catch(error) {
+        message(error.message || "Authentication failed.");
+    } finally {
+        button.disabled = false;
+        button.textContent = registerMode ? "REGISTER" : "LOGIN";
+    }
+});
+
+async function checkAccount(user) {
+    showApplication(user);
+
+    try {
+        const subscription = await ADLI_AUTH.getSubscription();
+
+        const status = subscription
+            ? subscription.status
+            : "pending";
+
+        document.getElementById("subscriptionStatus").textContent =
+            status.toUpperCase();
+
+        if (status !== "active") {
+            document.getElementById("subscriptionStatus").style.color =
+                "#f0b84b";
+
+            alert(
+                "Your account is registered, but your subscription is not active yet. Please contact the administrator."
+            );
+
+            return;
+        }
+
+        const access = await ADLI_AUTH.checkAccess();
+
+        if (!access.active) {
+            document.getElementById("subscriptionStatus").textContent =
+                "ACCESS NOT ACTIVE";
+
+            alert("Subscription access could not be verified.");
+            return;
+        }
+
+    } catch(error) {
+        document.getElementById("subscriptionStatus").textContent =
+            "UNVERIFIED";
+
+        console.error("Subscription check:", error);
+        alert("Could not verify subscription. Please try again later.");
+    }
+}
+
+document.getElementById("logoutButton").addEventListener("click", async () => {
+    try {
+        await ADLI_AUTH.logout();
+        showLogin();
+    } catch(error) {
+        alert(error.message);
+    }
+});
+
+document.querySelectorAll(".nav-btn").forEach(button => {
+    button.addEventListener("click", () => {
+        const page = button.dataset.page;
+
+        document.querySelectorAll(".nav-btn").forEach(item =>
+            item.classList.remove("active")
+        );
+
+        document.querySelectorAll(".page").forEach(item =>
+            item.classList.remove("active")
+        );
+
+        button.classList.add("active");
+        document.getElementById(page).classList.add("active");
+
+        document.getElementById("pageTitle").textContent =
+            button.textContent.trim();
+
+        document.getElementById("sidebar").classList.remove("open");
+
+        if (window.ADLI_APP && window.ADLI_APP.resizeChart) {
+            setTimeout(() => window.ADLI_APP.resizeChart(), 100);
+        }
+    });
+});
+
+document.getElementById("menuButton").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("open");
+});
+
+document.getElementById("calculateRisk").addEventListener("click", () => {
+    const balance = Number(document.getElementById("balance").value);
+    const risk = Number(document.getElementById("risk").value);
+
+    const output = document.getElementById("riskResult");
+
+    if (!Number.isFinite(balance) || !Number.isFinite(risk) ||
+        balance <= 0 || risk < 0 || risk > 100) {
+        output.textContent = "Enter valid balance and risk percentage.";
+        return;
+    }
+
+    const amount = balance * risk / 100;
+
+    output.textContent =
+        "Hypothetical risk budget: " +
+        amount.toFixed(2) +
+        " (same currency as account balance)";
+});
+
+document.querySelectorAll("[data-tf]").forEach(button => {
+    button.addEventListener("click", () => {
+        document.querySelectorAll("[data-tf]").forEach(item =>
+            item.classList.remove("active")
+        );
+
+        button.classList.add("active");
+
+        window.dispatchEvent(new CustomEvent("adli:timeframe-change", {
+            detail: { timeframe: button.dataset.tf }
+        }));
+    });
+});
+
+async function restoreSession() {
+    try {
+        if (!window.ADLI_AUTH) {
+            showLogin();
+            message("Supabase is not ready. Check script configuration.");
+            return;
+        }
+
+        const session = await ADLI_AUTH.getSession();
+
+        if (session && session.user) {
+            await checkAccount(session.user);
+        } else {
+            showLogin();
+        }
+
+    } catch(error) {
+        console.error(error);
+        showLogin();
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", restoreSession);
+} else {
+    restoreSession();
+}
+
+})();
+</script>
+
+</body>
+</html>
