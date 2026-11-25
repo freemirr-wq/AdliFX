@@ -1,1355 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#050811" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>ADLI FX intel indicator • XAUUSD</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background-color: #050811;
-      background-image:
-        radial-gradient(circle at 15% 10%, rgba(37, 99, 235, 0.14), transparent 38%),
-        radial-gradient(circle at 85% 15%, rgba(212, 175, 55, 0.09), transparent 35%),
-        radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.07), transparent 45%);
-      color: #f8fafc;
-      font-family: 'Inter', sans-serif;
-      overscroll-behavior-y: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .font-mono-num {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .luxury-card {
-      background: linear-gradient(150deg, rgba(16, 24, 42, 0.92), rgba(7, 11, 20, 0.97));
-      border: 1px solid rgba(148, 163, 184, 0.14);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
-    .gold-border {
-      border: 1px solid rgba(234, 179, 8, 0.28);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 24px rgba(234, 179, 8, 0.08);
-    }
-    .red-orb {
-      background: radial-gradient(circle at 35% 30%, #ff5252, #dc2626 55%, #7f1d1d 100%);
-      box-shadow: 0 0 24px rgba(239, 68, 68, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.35);
-    }
-    .chart-watermark {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 5;
-      opacity: 0.085;
-      user-select: none;
-    }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080c14">
+
+    <title>ADLI FX INTEL INDICATOR</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
-<body class="min-h-screen flex flex-col justify-between select-none">
 
-  <!-- MEMBER & ADMIN AUTH GATE (DATABASE ACCESS CONTROL) -->
-  <div id="authGate" class="fixed inset-0 z-50 bg-[#050811] flex items-center justify-center p-4 overflow-y-auto">
-    <div class="luxury-card gold-border w-full max-w-sm rounded-2xl p-5 space-y-4">
-      <div class="text-center space-y-1">
-        <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 via-red-600 to-rose-950 flex items-center justify-center font-black text-sm border border-amber-300/40 shadow-lg">
-          AFX
+<body>
+
+<div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">AF</div>
+            <div>
+                <div class="brand-name">ADLI FX</div>
+                <div class="brand-sub">INTEL INDICATOR</div>
+            </div>
         </div>
-        <h1 class="text-base font-black tracking-wide text-white pt-1">ADLI FX intel indicator</h1>
-        <p class="text-[11px] text-amber-300/80 font-medium">XAUUSD Dedicated Terminal • Akses Ahli & Admin</p>
-      </div>
 
-      <!-- Mode Switch: Login (Admin/Member) vs Register -->
-      <div class="grid grid-cols-2 gap-1 bg-[#070b14] p-1 rounded-xl border border-slate-800 text-xs font-bold">
-        <button onclick="switchAuthMode('login')" id="authTabLogin" class="py-1.5 rounded-lg bg-blue-600 text-white">Log Masuk</button>
-        <button onclick="switchAuthMode('register')" id="authTabRegister" class="py-1.5 rounded-lg text-slate-400">Daftar Ahli</button>
-      </div>
+        <div class="side-label">WORKSPACE</div>
 
-      <!-- LOGIN FORM (ADMIN & MEMBER) -->
-      <div id="loginForm" class="space-y-3">
-        <div>
-          <label class="text-[11px] text-slate-300 font-semibold block mb-1">Jenis Akaun</label>
-          <div class="grid grid-cols-2 gap-1.5">
-            <button type="button" onclick="selectLoginRole('member')" id="roleBtnMember" class="py-2 rounded-xl text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-500/40">
-              Member
+        <nav class="navigation">
+            <button class="nav-item active" data-page="overview">
+                <span>◈</span> Overview
             </button>
-            <button type="button" onclick="selectLoginRole('admin')" id="roleBtnAdmin" class="py-2 rounded-xl text-xs font-bold bg-[#070b14] text-slate-400 border border-slate-700">
-              Admin
+
+            <button class="nav-item" data-page="market">
+                <span>▥</span> Market Analysis
             </button>
-          </div>
-        </div>
 
-        <div>
-          <label id="loginCodeLabel" class="text-[11px] text-slate-300 font-semibold block mb-1">Kod Akses Ahli</label>
-          <input id="loginCodeInput" type="text" placeholder="Contoh: AFX-8899" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-mono-num text-white uppercase focus:outline-none focus:border-amber-400" />
-        </div>
-
-        <button onclick="handleMemberLogin()" id="loginBtn" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white shadow-lg shadow-blue-950">
-          Masuk Ke Terminal (Member)
-        </button>
-      </div>
-
-      <!-- REGISTER FORM -->
-      <div id="registerForm" class="hidden space-y-2.5">
-        <div>
-          <label class="text-[11px] text-slate-300 font-semibold block mb-1">Nama Penuh</label>
-          <input id="regNameInput" type="text" placeholder="Nama anda" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500" />
-        </div>
-        <div>
-          <label class="text-[11px] text-slate-300 font-semibold block mb-1">No. Telefon / Telegram</label>
-          <input id="regContactInput" type="text" placeholder="01x-xxxxxxx atau @username" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500" />
-        </div>
-        <button onclick="handleMemberRegister()" id="registerBtn" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white shadow-lg shadow-emerald-950">
-          Hantar Pendaftaran
-        </button>
-      </div>
-
-      <div id="authStatusMsg" class="text-[11px] text-center min-h-[18px] text-slate-400 leading-relaxed"></div>
-
-      <!-- Quick Owner Test Button -->
-      <div class="border-t border-slate-800/80 pt-3 flex items-center justify-between text-[10px] text-slate-500">
-        <span>Mod Ujian Awal</span>
-        <button onclick="enterPreviewMode()" class="text-amber-400 font-semibold underline">Buka Pratinjau</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAIN APP WRAPPER (HIDDEN UNTIL AUTHORIZED) -->
-  <div id="appShell" class="hidden min-h-screen flex flex-col justify-between pb-24">
-
-    <!-- TOP HEADER -->
-    <header class="sticky top-0 z-30 bg-[#050811]/95 backdrop-blur-md border-b border-slate-800/80 px-4 pt-3 pb-2.5">
-      <div class="max-w-md md:max-w-6xl mx-auto">
-        <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-red-600 to-rose-950 flex items-center justify-center font-black text-sm tracking-tighter shadow-lg shadow-red-950/50 border border-amber-300/40">
-              AFX
-            </div>
-            <div>
-              <div class="text-[10px] text-amber-300/80 font-semibold tracking-wider uppercase leading-none">intel indicator</div>
-              <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="font-black text-sm tracking-wide text-white">ADLI FX</span>
-                <span id="liveDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="sessionRoleBadge" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-400/30">MEMBER</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span id="connectionBadge" class="text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              XAUUSD LIVE
-            </span>
-            <button onclick="openSettingsModal()" class="w-8 h-8 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center text-slate-300 active:scale-95">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-              </svg>
+            <button class="nav-item" data-page="signals">
+                <span>⌁</span> Signal History
             </button>
-          </div>
+
+            <button class="nav-item" data-page="planner">
+                <span>◎</span> Trade Planner
+            </button>
+
+            <button class="nav-item" data-page="settings">
+                <span>⚙</span> Settings
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="connection-card">
+                <div class="connection-title">
+                    <span class="status-dot offline"></span>
+                    MARKET CONNECTION
+                </div>
+                <div id="connectionText">Waiting for data feed</div>
+            </div>
+
+            <div class="version">ADLI FX INTEL V1.0</div>
         </div>
 
-        <!-- DEDICATED XAUUSD BANNER -->
-        <div class="flex items-center justify-between bg-[#090e1a] px-3 py-1.5 rounded-xl border border-amber-400/20 text-xs">
-          <div class="flex items-center gap-2">
-            <span class="font-black text-amber-300 tracking-wide">XAUUSD</span>
-            <span class="text-[10px] text-slate-400">Gold Spot • Single-Pair Engine (Zero Lag)</span>
-          </div>
-          <span class="text-[10px] font-bold text-emerald-400">ACTIVE</span>
-        </div>
-      </div>
-    </header>
+    </aside>
 
-    <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 w-full max-w-md md:max-w-6xl mx-auto px-3.5 md:px-6 pt-3 space-y-3">
 
-      <!-- TAB 1: CHART -->
-      <section id="tab-chart" class="tab-view space-y-3">
-        <div class="luxury-card rounded-2xl p-3.5 flex items-center justify-between">
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-base md:text-lg font-black tracking-wide text-amber-300">XAUUSD</span>
-              <span id="activeTfBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">M15</span>
-              <span id="activeModeBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">SCALPING</span>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div class="topbar-left">
+                <button class="menu-button" id="menuButton">☰</button>
+                <div>
+                    <div class="page-heading" id="pageHeading">Overview</div>
+                    <div class="page-subheading">MARKET INTELLIGENCE TERMINAL</div>
+                </div>
             </div>
-            <div id="feedSourceLabel" class="text-[11px] text-slate-400 mt-0.5">XAUUSD Dedicated Feed</div>
-          </div>
-          <div class="text-right">
-            <div id="livePriceDisplay" class="font-mono-num text-xl md:text-2xl font-extrabold text-white">---.--</div>
-            <div id="priceChangeDisplay" class="font-mono-num text-[11px] font-semibold text-emerald-400">Loading...</div>
-          </div>
-        </div>
 
-        <!-- Timeframe Selector -->
-        <div class="flex items-center justify-between gap-1 bg-[#090e1a] p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
-          <button onclick="selectTimeframe('M1')" id="tf-M1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M1</button>
-          <button onclick="selectTimeframe('M5')" id="tf-M5" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M5</button>
-          <button onclick="selectTimeframe('M15')" id="tf-M15" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white">M15</button>
-          <button onclick="selectTimeframe('M30')" id="tf-M30" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M30</button>
-          <button onclick="selectTimeframe('H1')" id="tf-H1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">H1</button>
-          <button onclick="selectTimeframe('H4')" id="tf-H4" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">H4</button>
-          <button onclick="selectTimeframe('D1')" id="tf-D1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">D1</button>
-        </div>
-
-        <!-- Chart Container -->
-        <div class="luxury-card gold-border rounded-2xl p-2 md:p-3 relative overflow-hidden">
-          <div class="flex items-center justify-between px-2 pb-1.5 text-[10px] md:text-xs text-slate-400 gap-2 flex-wrap relative z-10">
-            <div class="flex items-center gap-1.5">
-              <span class="text-amber-300/90 font-bold">ZONE</span>
-              <button onclick="setTradingMode('SCALPING')" id="mode-SCALPING" class="px-2 py-0.5 rounded font-bold bg-blue-600 text-white">
-                SCALPING
-              </button>
-              <button onclick="setTradingMode('INTRADAY')" id="mode-INTRADAY" class="px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300">
-                INTRADAY
-              </button>
+            <div class="topbar-right">
+                <div class="market-clock" id="marketClock">--:--:-- MYT</div>
+                <div class="user-avatar">AF</div>
             </div>
-            <div class="flex items-center gap-3">
-              <span class="hidden md:inline text-[11px] text-slate-500">Scroll = Zoom • Drag = Pan/Harga</span>
-              <button onclick="resetChartView()" class="text-slate-300 hover:text-white font-semibold active:opacity-70">Reset View</button>
-              <button onclick="refreshCurrentChart()" class="text-amber-300 font-semibold active:opacity-70">↻ Refresh</button>
-            </div>
-          </div>
 
-          <div class="relative w-full h-[350px] md:h-[510px] lg:h-[570px] rounded-xl overflow-hidden border border-slate-800/80">
-            <!-- Logo Watermark di Latar Belakang Chart -->
-            <div class="chart-watermark" aria-hidden="true">
-              <div class="w-24 h-24 md:w-32 md:h-32 rounded-3xl border-2 border-amber-300 flex items-center justify-center font-black text-3xl md:text-5xl tracking-tighter text-amber-200">
-                AFX
-              </div>
-              <div class="mt-2 font-black text-xs md:text-base tracking-[0.28em] text-amber-200 uppercase">
-                ADLI FX INTEL INDICATOR
-              </div>
-            </div>
-            <div id="chartContainer" class="w-full h-full relative z-10"></div>
-          </div>
+        </header>
 
-          <div id="zoneOverlayList" class="mt-2.5 grid grid-cols-2 md:grid-cols-4 gap-1.5 text-[11px] relative z-10"></div>
-        </div>
 
-        <!-- Precision Execution Levels: RE-ENTRY, ENTRY, SL, TP1, TP2, TP3 -->
-        <div id="executionPlanContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div>
+        <!-- OVERVIEW PAGE -->
+        <section class="page active" id="page-overview">
 
-        <p class="text-[10px] text-slate-500 text-center px-2 leading-relaxed">
-          ADLI FX intel indicator • XAUUSD Precision Buy Area, Sell Area & Multi-TP Engine.
-        </p>
-      </section>
+            <div class="welcome-row">
+                <div>
+                    <div class="eyebrow">WELCOME TO YOUR TERMINAL</div>
+                    <h1>Market <span>Overview</span></h1>
+                    <p>Real-time XAUUSD market intelligence.</p>
+                </div>
 
-      <!-- TAB 2: STATS -->
-      <section id="tab-stats" class="tab-view hidden space-y-3">
-        <div class="luxury-card rounded-2xl p-4">
-          <h2 class="text-sm font-bold text-amber-300 uppercase tracking-wider mb-3">XAUUSD Performance Analytics</h2>
-          <div class="grid grid-cols-3 gap-2 text-center">
-            <div class="bg-[#070b14] p-3 rounded-xl border border-slate-800">
-              <div class="text-[10px] text-slate-400">WIN RATE</div>
-              <div class="font-mono-num text-lg font-extrabold text-emerald-400 mt-1">78.4%</div>
+                <div class="symbol-chip">
+                    <span class="gold-dot"></span>
+                    XAUUSD
+                    <span class="chip-small">GOLD</span>
+                </div>
             </div>
-            <div class="bg-[#070b14] p-3 rounded-xl border border-slate-800">
-              <div class="text-[10px] text-slate-400">NET PIPS</div>
-              <div class="font-mono-num text-lg font-extrabold text-blue-400 mt-1">+1,420</div>
-            </div>
-            <div class="bg-[#070b14] p-3 rounded-xl border border-slate-800">
-              <div class="text-[10px] text-slate-400">RISK/REWARD</div>
-              <div class="font-mono-num text-lg font-extrabold text-amber-400 mt-1">1:4.0</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- TAB 3: SIGNAL -->
-      <section id="tab-signal" class="tab-view hidden space-y-3">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-extrabold tracking-wide text-amber-300">XAUUSD SELL AREA & BUY AREA</h2>
-          <span id="signalModeLabel" class="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold border border-red-500/30">SCALPING</span>
-        </div>
-        <div id="signalCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
-      </section>
 
-      <!-- TAB 4: PLANNER -->
-      <section id="tab-planner" class="tab-view hidden space-y-3">
-        <div class="luxury-card rounded-2xl p-4 space-y-3">
-          <h2 class="text-sm font-extrabold tracking-wide text-amber-300">XAUUSD LOT & RISK CALCULATOR</h2>
-          <div>
-            <label class="text-[11px] text-slate-400 block mb-1">Account Balance (USD)</label>
-            <input id="calcBalance" type="number" value="1000" oninput="calculateLot()" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] text-slate-400 block mb-1">Risk (%)</label>
-              <input id="calcRisk" type="number" value="2" step="0.5" oninput="calculateLot()" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-400 block mb-1">Stop Loss (Pips)</label>
-              <input id="calcSL" type="number" value="30" oninput="calculateLot()" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
-            </div>
-          </div>
-          <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
-            <div>
-              <div class="text-[10px] text-blue-300 uppercase">Recommended Lot Size</div>
-              <div id="calcRiskUsd" class="text-[11px] text-slate-400">Risk Amount: $20.00</div>
-            </div>
-            <div id="calcLotResult" class="font-mono-num text-2xl font-extrabold text-blue-400">0.07</div>
-          </div>
-        </div>
-      </section>
+            <!-- MARKET CARDS -->
+            <div class="stats-grid">
 
-      <!-- TAB 5: NEWS -->
-      <section id="tab-news" class="tab-view hidden space-y-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-[10px] text-slate-400 uppercase tracking-wider">Economic Calendar • Times in MYT</div>
-            <h2 class="text-lg font-extrabold">MARKET NEWS</h2>
-          </div>
-          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30">USD IMPACT</span>
-        </div>
-        <div class="rounded-2xl p-4 bg-gradient-to-br from-blue-600 to-indigo-900 shadow-lg shadow-blue-950/60 border border-blue-400/30">
-          <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-blue-100">
-            <span>• NEXT HIGH IMPACT</span>
-            <span class="bg-red-500/30 text-white px-2 py-0.5 rounded">HIGH IMPACT</span>
-          </div>
-          <div class="text-lg font-extrabold mt-2 leading-snug">US Core PCE & FOMC Rate Outlook</div>
-          <div class="flex items-center justify-between mt-3">
-            <span class="font-mono-num text-xl font-extrabold">21:30 MYT</span>
-            <span class="text-xs font-bold bg-white/15 px-3 py-1 rounded-full">XAUUSD Volatility Alert</span>
-          </div>
-        </div>
-      </section>
+                <div class="stat-card">
+                    <div class="stat-label">GOLD PRICE</div>
+                    <div class="stat-value" id="goldPrice">--</div>
+                    <div class="stat-note" id="priceChange">Waiting for market feed</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">MARKET TREND</div>
+                    <div class="stat-value neutral" id="marketTrend">WAITING</div>
+                    <div class="stat-note">Multi-timeframe analysis</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">ACTIVE SIGNAL</div>
+                    <div class="stat-value" id="activeSignal">NONE</div>
+                    <div class="stat-note">Confirmed signals only</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">DATA STATUS</div>
+                    <div class="stat-value neutral" id="dataStatus">OFFLINE</div>
+                    <div class="stat-note">External feed connection</div>
+                </div>
+
+            </div>
+
+
+            <!-- CHART -->
+            <div class="panel chart-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">XAUUSD PRICE CHART</div>
+                        <div class="panel-description">Gold spot market</div>
+                    </div>
+
+                    <div class="timeframes" id="timeframes">
+                        <button data-tf="1m">M1</button>
+                        <button data-tf="5m" class="selected">M5</button>
+                        <button data-tf="15m">M15</button>
+                        <button data-tf="30m">M30</button>
+                        <button data-tf="1h">H1</button>
+                        <button data-tf="4h">H4</button>
+                        <button data-tf="1d">D1</button>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <div id="priceChart"></div>
+                    <div class="chart-watermark">
+                        <strong>ADLI FX</strong>
+                        <span>INTEL INDICATOR</span>
+                    </div>
+                    <div class="chart-empty" id="chartEmpty">
+                        <div class="empty-icon">◈</div>
+                        <strong>Awaiting market data</strong>
+                        <span>Connect a supported XAUUSD feed to display candles.</span>
+                    </div>
+                </div>
+
+                <div class="chart-footer">
+                    <span>SYMBOL: XAUUSD</span>
+                    <span id="chartTimeframe">TIMEFRAME: M5</span>
+                    <span>DATA: NOT CONNECTED</span>
+                </div>
+
+            </div>
+
+
+            <!-- ANALYSIS -->
+            <div class="content-grid">
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">AI MARKET ANALYSIS</div>
+                            <div class="panel-description">Multi-timeframe overview</div>
+                        </div>
+                        <span class="tag">XAUUSD</span>
+                    </div>
+
+                    <div class="analysis-placeholder">
+                        <div class="analysis-symbol">◈</div>
+                        <strong>Analysis not available</strong>
+                        <p>Market data and confirmation rules must be connected before a signal can be generated.</p>
+                    </div>
+                </div>
+
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">MULTI-TIMEFRAME</div>
+                            <div class="panel-description">Trend alignment</div>
+                        </div>
+                    </div>
+
+                    <div class="mtf-list">
+                        <div class="mtf-row"><span>M1</span><b>WAITING</b></div>
+                        <div class="mtf-row"><span>M5</span><b>WAITING</b></div>
+                        <div class="mtf-row"><span>M15</span><b>WAITING</b></div>
+                        <div class="mtf-row"><span>M30</span><b>WAITING</b></div>
+                        <div class="mtf-row"><span>H1</span><b>WAITING</b></div>
+                        <div class="mtf-row"><span>H4</span><b>WAITING</b></div>
+                        <div class="mtf-row"><span>D1</span><b>WAITING</b></div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- SIGNAL LEVELS -->
+            <div class="panel signal-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">TRADE LEVELS</div>
+                        <div class="panel-description">Latest confirmed setup</div>
+                    </div>
+                    <span class="tag">NO ACTIVE SETUP</span>
+                </div>
+
+                <div class="levels-grid">
+                    <div class="level-box">
+                        <span>ENTRY</span>
+                        <strong>--</strong>
+                    </div>
+                    <div class="level-box stop">
+                        <span>STOP LOSS</span>
+                        <strong>--</strong>
+                    </div>
+                    <div class="level-box target">
+                        <span>TAKE PROFIT 1</span>
+                        <strong>--</strong>
+                    </div>
+                    <div class="level-box target">
+                        <span>TAKE PROFIT 2</span>
+                        <strong>--</strong>
+                    </div>
+                    <div class="level-box target">
+                        <span>TAKE PROFIT 3</span>
+                        <strong>--</strong>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- MARKET PAGE -->
+        <section class="page" id="page-market">
+            <div class="welcome-row">
+                <div>
+                    <div class="eyebrow">XAUUSD ONLY</div>
+                    <h1>Market <span>Analysis</span></h1>
+                    <p>Technical market structure and price action.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">SMART MONEY CONCEPTS</div>
+                <div class="feature-grid">
+                    <div class="feature-item">BOS <span>WAITING</span></div>
+                    <div class="feature-item">CHoCH <span>WAITING</span></div>
+                    <div class="feature-item">FAIR VALUE GAP <span>WAITING</span></div>
+                    <div class="feature-item">ORDER BLOCK <span>WAITING</span></div>
+                    <div class="feature-item">LIQUIDITY SWEEP <span>WAITING</span></div>
+                    <div class="feature-item">PREMIUM / DISCOUNT <span>WAITING</span></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SIGNALS PAGE -->
+        <section class="page" id="page-signals">
+            <div class="welcome-row">
+                <div>
+                    <div class="eyebrow">SIGNAL RECORDS</div>
+                    <h1>Signal <span>History</span></h1>
+                    <p>Historical signal outcomes and tracking.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="empty-state">
+                    <strong>No signal records</strong>
+                    <p>Confirmed signal records will appear here when the analysis engine is connected.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- PLANNER PAGE -->
+        <section class="page" id="page-planner">
+            <div class="welcome-row">
+                <div>
+                    <div class="eyebrow">RISK MANAGEMENT</div>
+                    <h1>Trade <span>Planner</span></h1>
+                    <p>Educational position planning calculator.</p>
+                </div>
+            </div>
+
+            <div class="panel planner-panel">
+                <div class="planner-input">
+                    <label>Account balance (USD)</label>
+                    <input type="number" id="balance" placeholder="1000" min="0">
+                </div>
+
+                <div class="planner-input">
+                    <label>Risk percentage</label>
+                    <input type="number" id="risk" placeholder="1" min="0" max="100" step="0.1">
+                </div>
+
+                <div class="planner-input">
+                    <label>Stop distance (price units)</label>
+                    <input type="number" id="stopDistance" placeholder="5" min="0" step="0.01">
+                </div>
+
+                <button class="primary-button" id="calculateRisk">
+                    CALCULATE RISK BUDGET
+                </button>
+
+                <div class="planner-result" id="plannerResult">
+                    Enter values to calculate a risk budget.
+                </div>
+
+                <p class="disclaimer">
+                    This calculator does not determine a broker-specific lot size.
+                    XAUUSD contract specifications and tick values vary by broker.
+                </p>
+            </div>
+        </section>
+
+
+        <!-- SETTINGS PAGE -->
+        <section class="page" id="page-settings">
+            <div class="welcome-row">
+                <div>
+                    <div class="eyebrow">SYSTEM PREFERENCES</div>
+                    <h1>Terminal <span>Settings</span></h1>
+                    <p>Application and display information.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="settings-row">
+                    <span>Platform</span>
+                    <strong>ADLI FX INTEL INDICATOR</strong>
+                </div>
+                <div class="settings-row">
+                    <span>Market</span>
+                    <strong>XAUUSD</strong>
+                </div>
+                <div class="settings-row">
+                    <span>Version</span>
+                    <strong>1.0.0</strong>
+                </div>
+                <div class="settings-row">
+                    <span>Data feed</span>
+                    <strong>Not connected</strong>
+                </div>
+            </div>
+        </section>
+
+
+        <footer class="footer">
+            <span>ADLI FX INTEL INDICATOR</span>
+            <span>MARKET ANALYSIS PLATFORM</span>
+        </footer>
 
     </main>
 
-    <!-- BOTTOM NAVIGATION BAR -->
-    <nav class="fixed bottom-0 inset-x-0 z-40 bg-[#050811]/95 backdrop-blur-lg border-t border-slate-800/90 px-2 py-1.5">
-      <div class="max-w-md md:max-w-6xl mx-auto grid grid-cols-5 items-center text-center relative">
-        <button onclick="switchTab('chart')" id="nav-chart" class="nav-btn flex flex-col items-center justify-center py-1 text-blue-400">
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
-          <span class="text-[9px] font-bold tracking-wider">CHART</span>
-        </button>
+</div>
 
-        <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          <span class="text-[9px] font-bold tracking-wider">STATS</span>
-        </button>
+<script src="config.js"></script>
+<script src="app.js"></script>
 
-        <div class="flex flex-col items-center justify-center -mt-6">
-          <button onclick="switchTab('signal')" id="nav-signal" class="red-orb w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-xs tracking-tighter text-white border-2 border-red-300/40 active:scale-95 transition-transform">
-            AFX
-          </button>
-          <span class="text-[9px] font-bold tracking-wider text-slate-300 mt-1">SIGNAL</span>
-        </div>
-
-        <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-          <span class="text-[9px] font-bold tracking-wider">PLANNER</span>
-        </button>
-
-        <button onclick="switchTab('news')" id="nav-news" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span class="text-[9px] font-bold tracking-wider">NEWS</span>
-        </button>
-      </div>
-    </nav>
-  </div>
-
-  <!-- SETTINGS MODAL -->
-  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="luxury-card w-full max-w-sm rounded-2xl p-5 space-y-3.5 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between">
-        <h3 class="font-bold text-base">ADLI FX • XAUUSD Feed & Alerts</h3>
-        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
-      </div>
-      <div>
-        <label class="text-[11px] text-slate-300 font-semibold block mb-1">Twelve Data API Key</label>
-        <input id="apiKeyInput" type="text" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-num text-emerald-400 focus:outline-none focus:border-blue-500" />
-      </div>
-      <div class="border-t border-slate-800 pt-3 space-y-2">
-        <div class="text-[11px] font-bold text-blue-400 uppercase">Optional Telegram Alert</div>
-        <input id="tgTokenInput" type="text" placeholder="Telegram Bot Token" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-num text-white focus:outline-none focus:border-blue-500" />
-        <input id="tgChatInput" type="text" placeholder="Telegram Chat ID" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-num text-white focus:outline-none focus:border-blue-500" />
-      </div>
-      <button onclick="saveApiKey()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white shadow-lg shadow-blue-950">
-        Simpan & Aktifkan
-      </button>
-      <button onclick="logoutMember()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xs text-red-400">
-        Log Keluar Akaun
-      </button>
-    </div>
-  </div>
-
-  <script>
-    // === SUPABASE DATABASE CONFIG ===
-    const SUPABASE_URL = "https://rgdeexhlbszajcgfysnc.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_HxM7ZqdewVaw4lJxMGnl7w_p8rks-1U";
-
-    const DEFAULT_API_KEY = "86e67a606d104c72be5fe7308ee22a9f";
-    let apiKey = localStorage.getItem("adlifx_td_key") || DEFAULT_API_KEY;
-    let tgToken = localStorage.getItem("adlifx_tg_token") || "";
-    let tgChatId = localStorage.getItem("adlifx_tg_chat") || "";
-
-    const ACTIVE_PAIR = "XAUUSD";
-    let selectedLoginRole = "member";
-    let currentTf = "M15";
-    let tradingMode = "SCALPING";
-    let chart, candleSeries, priceLines = [];
-    let chartResizeObserver = null;
-    let pollInterval = null;
-    let tickInterval = null;
-    let lastCandles = [];
-    let alertedZones = new Set();
-    let audioCtx = null;
-    let terminalInitialized = false;
-    let loadSeq = 0;
-    let xauReferencePrice = 3535.00;
-
-    function selectLoginRole(role) {
-      selectedLoginRole = role === "admin" ? "admin" : "member";
-      const isAdmin = selectedLoginRole === "admin";
-
-      document.getElementById("roleBtnMember").className = !isAdmin
-        ? "py-2 rounded-xl text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-500/40"
-        : "py-2 rounded-xl text-xs font-bold bg-[#070b14] text-slate-400 border border-slate-700";
-
-      document.getElementById("roleBtnAdmin").className = isAdmin
-        ? "py-2 rounded-xl text-xs font-bold bg-red-600/20 text-red-300 border border-red-500/40"
-        : "py-2 rounded-xl text-xs font-bold bg-[#070b14] text-slate-400 border border-slate-700";
-
-      document.getElementById("loginCodeLabel").innerText = isAdmin ? "Kod Akses Admin" : "Kod Akses Ahli";
-      document.getElementById("loginCodeInput").placeholder = isAdmin ? "Contoh: AFX-ADMIN" : "Contoh: AFX-8899";
-      document.getElementById("loginBtn").innerText = isAdmin ? "Masuk Ke Terminal (Admin)" : "Masuk Ke Terminal (Member)";
-      document.getElementById("authStatusMsg").innerText = "";
-    }
-
-    function switchAuthMode(mode) {
-      const isLogin = mode === "login";
-      document.getElementById("loginForm").classList.toggle("hidden", !isLogin);
-      document.getElementById("registerForm").classList.toggle("hidden", isLogin);
-      document.getElementById("authTabLogin").className = isLogin
-        ? "py-1.5 rounded-lg bg-blue-600 text-white"
-        : "py-1.5 rounded-lg text-slate-400";
-      document.getElementById("authTabRegister").className = !isLogin
-        ? "py-1.5 rounded-lg bg-blue-600 text-white"
-        : "py-1.5 rounded-lg text-slate-400";
-      document.getElementById("authStatusMsg").innerText = "";
-    }
-
-    function unlockTerminal(memberLabel, roleLabel = "member") {
-      const normalizedRole = (roleLabel || "member").toUpperCase();
-      localStorage.setItem("adlifx_member_session", JSON.stringify({
-        label: memberLabel || "verified",
-        role: normalizedRole
-      }));
-
-      const badge = document.getElementById("sessionRoleBadge");
-      badge.innerText = normalizedRole;
-      badge.className = normalizedRole === "ADMIN"
-        ? "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-red-600/25 text-red-300 border border-red-500/40"
-        : "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-400/30";
-
-      document.getElementById("authGate").classList.add("hidden");
-      document.getElementById("appShell").classList.remove("hidden");
-      if (!terminalInitialized) {
-        terminalInitialized = true;
-        initChart();
-        loadMarketData();
-        calculateLot();
-      } else {
-        fitChartToContainer(true);
-      }
-    }
-
-    function logoutMember() {
-      localStorage.removeItem("adlifx_member_session");
-      closeSettingsModal();
-      document.getElementById("appShell").classList.add("hidden");
-      document.getElementById("authGate").classList.remove("hidden");
-      document.getElementById("authStatusMsg").innerText = "";
-    }
-
-    function enterPreviewMode() {
-      unlockTerminal("preview-mode", selectedLoginRole === "admin" ? "admin" : "preview");
-    }
-
-    async function handleMemberLogin() {
-      const code = document.getElementById("loginCodeInput").value.trim().toUpperCase();
-      const statusEl = document.getElementById("authStatusMsg");
-      if (!code) {
-        statusEl.innerText = selectedLoginRole === "admin"
-          ? "Sila masukkan Kod Akses Admin."
-          : "Sila masukkan Kod Akses Ahli.";
-        return;
-      }
-      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-        statusEl.innerText = "Database belum disambung.";
-        return;
-      }
-      statusEl.innerText = "Menyemak kod akses dalam database...";
-      try {
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/members?access_code=eq.${encodeURIComponent(code)}&select=*`,
-          {
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-            }
-          }
-        );
-        const rows = await res.json();
-        if (!Array.isArray(rows) || rows.length === 0) {
-          statusEl.innerText = "Kod akses tidak dijumpai dalam jadual members.";
-          return;
-        }
-        const member = rows[0];
-        if (member.status !== "active") {
-          statusEl.innerText = `Akaun berstatus "${member.status}". Aktifkan ke "active" di Supabase dahulu.`;
-          return;
-        }
-        if (member.expired_at && new Date(member.expired_at) < new Date()) {
-          statusEl.innerText = "Akses telah tamat tempoh. Sila perbaharui di Supabase.";
-          return;
-        }
-
-        const dbRole = String(member.role || "").toLowerCase();
-        if (selectedLoginRole === "admin" && dbRole && dbRole !== "admin") {
-          statusEl.innerText = "Kod ini bukan akaun Admin. Pilih Member atau tetapkan role = 'admin' di Supabase.";
-          return;
-        }
-
-        const effectiveRole = selectedLoginRole === "admin" || dbRole === "admin" ? "admin" : "member";
-        unlockTerminal(member.name || code, effectiveRole);
-      } catch (e) {
-        statusEl.innerText = "Gagal berhubung ke database. Semak polisi SELECT jadual members.";
-      }
-    }
-
-    async function handleMemberRegister() {
-      const name = document.getElementById("regNameInput").value.trim();
-      const contact = document.getElementById("regContactInput").value.trim();
-      const statusEl = document.getElementById("authStatusMsg");
-
-      if (!name || !contact) {
-        statusEl.innerText = "Sila isi Nama Penuh dan No. Telefon / Telegram.";
-        return;
-      }
-      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-        statusEl.innerText = "Database belum disambung.";
-        return;
-      }
-
-      const generatedCode = "AFX-" + Math.floor(1000 + Math.random() * 9000);
-      statusEl.innerText = "Menghantar pendaftaran ke database...";
-
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/members`, {
-          method: "POST",
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            "Content-Type": "application/json",
-            Prefer: "return=representation"
-          },
-          body: JSON.stringify({
-            name,
-            contact,
-            access_code: generatedCode,
-            status: "pending"
-          })
-        });
-
-        if (!res.ok) {
-          statusEl.innerText = "Pendaftaran gagal disimpan. Semak polisi RLS INSERT jadual members.";
-          return;
-        }
-
-        statusEl.innerHTML = `Berdaftar! Kod anda: <b class="text-emerald-400">${generatedCode}</b><br/>Status: <b>pending</b> — aktifkan ke <b>active</b> di Supabase dahulu.`;
-      } catch (e) {
-        statusEl.innerText = "Ralat rangkaian semasa mendaftar.";
-      }
-    }
-
-    function playAlertBeep() {
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
-      } catch (e) {}
-    }
-
-    async function requestNotifPermission() {
-      if ("Notification" in window && Notification.permission === "default") {
-        try { await Notification.requestPermission(); } catch (e) {}
-      }
-    }
-
-    async function sendTelegramAlert(text) {
-      if (!tgToken || !tgChatId) return;
-      try {
-        await fetch(`https://api.telegram.org/bot${encodeURIComponent(tgToken)}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: tgChatId, text })
-        });
-      } catch (e) {}
-    }
-
-    function triggerZoneNotification(title, body) {
-      playAlertBeep();
-      if ("vibrate" in navigator) {
-        try { navigator.vibrate([200, 100, 200]); } catch (e) {}
-      }
-      if ("Notification" in window && Notification.permission === "granted") {
-        try { new Notification(title, { body, tag: title }); } catch (e) {}
-      }
-      sendTelegramAlert(`${title}\n${body}`);
-    }
-
-    function getChartHeight() {
-      if (window.innerWidth >= 1024) return 570;
-      if (window.innerWidth >= 768) return 510;
-      return 350;
-    }
-
-    function initChart() {
-      const container = document.getElementById("chartContainer");
-      const width = container.clientWidth || 340;
-      const height = getChartHeight();
-
-      chart = LightweightCharts.createChart(container, {
-        width,
-        height,
-        layout: {
-          background: { color: "rgba(7, 11, 20, 0.84)" },
-          textColor: "#94a3b8",
-          fontSize: window.innerWidth >= 768 ? 12 : 11,
-        },
-        grid: {
-          vertLines: { color: "rgba(30, 41, 59, 0.42)" },
-          horzLines: { color: "rgba(30, 41, 59, 0.42)" },
-        },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-        rightPriceScale: {
-          borderColor: "#1e293b",
-          autoScale: true,
-        },
-        timeScale: {
-          borderColor: "#1e293b",
-          timeVisible: true,
-          secondsVisible: false,
-          rightOffset: 8,
-          barSpacing: window.innerWidth >= 768 ? 9 : 6,
-        },
-        handleScroll: {
-          mouseWheel: true,
-          pressedMouseMove: true,
-          horzTouchDrag: true,
-          vertTouchDrag: true,
-        },
-        handleScale: {
-          axisPressedMouseMove: {
-            time: true,
-            price: true,
-          },
-          axisDoubleClickReset: {
-            time: true,
-            price: true,
-          },
-          mouseWheel: true,
-          pinch: true,
-        },
-      });
-
-      candleSeries = chart.addCandlestickSeries({
-        upColor: "#38bdf8",
-        downColor: "#ef4444",
-        borderUpColor: "#38bdf8",
-        borderDownColor: "#ef4444",
-        wickUpColor: "#7dd3fc",
-        wickDownColor: "#f87171",
-      });
-
-      if (window.ResizeObserver) {
-        chartResizeObserver = new ResizeObserver(() => {
-          fitChartToContainer(false);
-        });
-        chartResizeObserver.observe(container);
-      }
-
-      window.addEventListener("resize", () => fitChartToContainer(false));
-    }
-
-    function fitChartToContainer(resetScale = true) {
-      const container = document.getElementById("chartContainer");
-      if (chart && container && container.clientWidth > 0) {
-        chart.applyOptions({
-          width: container.clientWidth,
-          height: getChartHeight(),
-          layout: { fontSize: window.innerWidth >= 768 ? 12 : 11 },
-        });
-        if (resetScale) {
-          chart.priceScale("right").applyOptions({ autoScale: true });
-          chart.timeScale().fitContent();
-        }
-      }
-    }
-
-    function resetChartView() {
-      if (!chart) return;
-      chart.priceScale("right").applyOptions({ autoScale: true });
-      chart.timeScale().fitContent();
-    }
-
-    function generateXauCandles(tf, anchorPrice = xauReferencePrice) {
-      const stepMap = { M1: 60, M5: 300, M15: 900, M30: 1800, H1: 3600, H4: 14400, D1: 86400 };
-      const targetEndPrice = anchorPrice || xauReferencePrice;
-      const secStep = stepMap[tf] || 900;
-      const vol = 3.10;
-      const now = Math.floor(Date.now() / 1000);
-      const candles = [];
-
-      let seed = 8800 + tf.length * 37;
-      const rand = () => {
-        seed = (seed * 9301 + 49297) % 233280;
-        return seed / 233280;
-      };
-
-      let price = targetEndPrice * (1 + (rand() - 0.5) * 0.01);
-      for (let i = 79; i >= 0; i--) {
-        const t = now - i * secStep;
-        const pullToTarget = (targetEndPrice - price) * 0.08;
-        const wave = Math.sin(i * 0.25) * vol * 0.5;
-        const delta = (rand() - 0.5) * vol + wave * 0.2 + pullToTarget;
-        const open = price;
-        const close = i === 0 ? targetEndPrice : Math.max(10, open + delta);
-        const high = Math.max(open, close) + rand() * vol * 0.55;
-        const low = Math.min(open, close) - rand() * vol * 0.55;
-
-        candles.push({
-          time: t,
-          open: Number(open.toFixed(2)),
-          high: Number(high.toFixed(2)),
-          low: Number(low.toFixed(2)),
-          close: Number(close.toFixed(2)),
-        });
-        price = close;
-      }
-      return candles;
-    }
-
-    function clearZones() {
-      priceLines.forEach(line => {
-        try { candleSeries.removePriceLine(line); } catch (e) {}
-      });
-      priceLines = [];
-    }
-
-    function computeAverageCandleRange(candles) {
-      const slice = candles.slice(-25);
-      if (!slice.length) return 1.5;
-      const sum = slice.reduce((acc, c) => acc + Math.max(0.05, c.high - c.low), 0);
-      return sum / slice.length;
-    }
-
-    // Pengiraan BUY AREA & SELL AREA XAUUSD berdasarkan struktur ayunan + impuls sebenar
-    function detectAreas(candles) {
-      if (!candles || candles.length < 18) return { sells: [], buys: [] };
-
-      const currentClose = candles[candles.length - 1].close;
-      const avgRange = computeAverageCandleRange(candles);
-      const lookback = tradingMode === "SCALPING" ? 2 : 3;
-      const maxDistPct = tradingMode === "SCALPING" ? 0.016 : 0.045;
-      const minImpulse = avgRange * (tradingMode === "SCALPING" ? 1.25 : 1.55);
-
-      let swings = [];
-      for (let i = lookback; i < candles.length - lookback; i++) {
-        let isHigh = true;
-        let isLow = true;
-        for (let k = 1; k <= lookback; k++) {
-          if (candles[i].high <= candles[i - k].high || candles[i].high <= candles[i + k].high) {
-            isHigh = false;
-          }
-          if (candles[i].low >= candles[i - k].low || candles[i].low >= candles[i + k].low) {
-            isLow = false;
-          }
-        }
-        if (isHigh) swings.push({ type: "HIGH", index: i, price: candles[i].high });
-        if (isLow) swings.push({ type: "LOW", index: i, price: candles[i].low });
-      }
-
-      let sells = [];
-      let buys = [];
-
-      for (let i = 2; i < candles.length; i++) {
-        const c = candles[i];
-        const prevSwings = swings.filter(s => s.index < i);
-        const lastHigh = [...prevSwings].reverse().find(s => s.type === "HIGH");
-        const lastLow = [...prevSwings].reverse().find(s => s.type === "LOW");
-
-        if (lastLow && c.low < lastLow.price && (candles[i - 1].high - c.low) >= minImpulse) {
-          for (let j = i - 1; j >= Math.max(1, i - 7); j--) {
-            if (candles[j].close > candles[j].open) {
-              const zonePrice = Number(((candles[j].high + candles[j].open) / 2).toFixed(2));
-              if (zonePrice > currentClose && (zonePrice - currentClose) / currentClose <= maxDistPct) {
-                sells.push({
-                  price: zonePrice,
-                  swingRef: Number(candles[j].high.toFixed(2)),
-                  tag: "SELL AREA",
-                  reason: "Struktur turun XAUUSD & pullback zon jualan sah"
-                });
-              }
-              break;
-            }
-          }
-        }
-
-        if (lastHigh && c.high > lastHigh.price && (c.high - candles[i - 1].low) >= minImpulse) {
-          for (let j = i - 1; j >= Math.max(1, i - 7); j--) {
-            if (candles[j].close < candles[j].open) {
-              const zonePrice = Number(((candles[j].low + candles[j].open) / 2).toFixed(2));
-              if (zonePrice < currentClose && (currentClose - zonePrice) / currentClose <= maxDistPct) {
-                buys.push({
-                  price: zonePrice,
-                  swingRef: Number(candles[j].low.toFixed(2)),
-                  tag: "BUY AREA",
-                  reason: "Struktur naik XAUUSD & pullback zon belian sah"
-                });
-              }
-              break;
-            }
-          }
-        }
-      }
-
-      if (sells.length === 0) {
-        const upperSwings = swings
-          .filter(s => s.type === "HIGH" && s.price > currentClose && (s.price - currentClose) / currentClose <= maxDistPct)
-          .sort((a, b) => a.price - b.price);
-
-        if (upperSwings.length > 0) {
-          upperSwings.slice(0, 2).forEach(sw => {
-            const entryPt = Number((sw.price - avgRange * 0.35).toFixed(2));
-            sells.push({
-              price: entryPt > currentClose ? entryPt : Number(sw.price.toFixed(2)),
-              swingRef: Number(sw.price.toFixed(2)),
-              tag: "SELL AREA",
-              reason: "Zon puncak ayunan & penolakan jualan XAUUSD"
-            });
-          });
-        } else {
-          const offset = Math.max(avgRange * 2.2, currentClose * (tradingMode === "SCALPING" ? 0.0022 : 0.0065));
-          const p = Number((currentClose + offset).toFixed(2));
-          sells.push({
-            price: p,
-            swingRef: Number((p + avgRange * 0.8).toFixed(2)),
-            tag: "SELL AREA",
-            reason: "Zon jualan berhampiran paras rintangan ayunan"
-          });
-        }
-      }
-
-      if (buys.length === 0) {
-        const lowerSwings = swings
-          .filter(s => s.type === "LOW" && s.price < currentClose && (currentClose - s.price) / currentClose <= maxDistPct)
-          .sort((a, b) => b.price - a.price);
-
-        if (lowerSwings.length > 0) {
-          lowerSwings.slice(0, 2).forEach(sw => {
-            const entryPt = Number((sw.price + avgRange * 0.35).toFixed(2));
-            buys.push({
-              price: entryPt < currentClose ? entryPt : Number(sw.price.toFixed(2)),
-              swingRef: Number(sw.price.toFixed(2)),
-              tag: "BUY AREA",
-              reason: "Zon dasar ayunan & sokongan belian XAUUSD"
-            });
-          });
-        } else {
-          const offset = Math.max(avgRange * 2.2, currentClose * (tradingMode === "SCALPING" ? 0.0022 : 0.0065));
-          const p = Number((currentClose - offset).toFixed(2));
-          buys.push({
-            price: p,
-            swingRef: Number((p - avgRange * 0.8).toFixed(2)),
-            tag: "BUY AREA",
-            reason: "Zon belian berhampiran paras sokongan ayunan"
-          });
-        }
-      }
-
-      const minGapRatio = 0.0012;
-      const uniqueSells = sells
-        .sort((a, b) => a.price - b.price)
-        .filter((item, idx, arr) => idx === 0 || Math.abs(item.price - arr[idx - 1].price) / item.price > minGapRatio)
-        .slice(0, 2);
-
-      const uniqueBuys = buys
-        .sort((a, b) => b.price - a.price)
-        .filter((item, idx, arr) => idx === 0 || Math.abs(item.price - arr[idx - 1].price) / item.price > minGapRatio)
-        .slice(0, 2);
-
-      return { sells: uniqueSells, buys: uniqueBuys };
-    }
-
-    function buildExecutionPlan(direction, zone, currentClose, avgRange) {
-      const riskStep = Math.max(avgRange * (tradingMode === "SCALPING" ? 1.15 : 1.6), currentClose * (tradingMode === "SCALPING" ? 0.0016 : 0.004));
-
-      if (direction === "BUY") {
-        const entry = Number(zone.price.toFixed(2));
-        const reentry = Number(Math.max(1, entry - riskStep * 0.65).toFixed(2));
-        const sl = Number(Math.max(1, Math.min(entry - riskStep, (zone.swingRef || entry) - riskStep * 0.45)).toFixed(2));
-        const riskDist = Math.max(0.20, entry - sl);
-        const tp1 = Number((entry + riskDist * 1.5).toFixed(2));
-        const tp2 = Number((entry + riskDist * 2.5).toFixed(2));
-        const tp3 = Number((entry + riskDist * 4.0).toFixed(2));
-        return { direction: "BUY", label: "BUY AREA", entry, reentry, sl, tp1, tp2, tp3, reason: zone.reason };
-      } else {
-        const entry = Number(zone.price.toFixed(2));
-        const reentry = Number((entry + riskStep * 0.65).toFixed(2));
-        const sl = Number(Math.max(entry + riskStep, (zone.swingRef || entry) + riskStep * 0.45).toFixed(2));
-        const riskDist = Math.max(0.20, sl - entry);
-        const tp1 = Number((entry - riskDist * 1.5).toFixed(2));
-        const tp2 = Number((entry - riskDist * 2.5).toFixed(2));
-        const tp3 = Number((entry - riskDist * 4.0).toFixed(2));
-        return { direction: "SELL", label: "SELL AREA", entry, reentry, sl, tp1, tp2, tp3, reason: zone.reason };
-      }
-    }
-
-    function renderExecutionPlans(buys, sells, currentClose, avgRange) {
-      const execContainer = document.getElementById("executionPlanContainer");
-      execContainer.innerHTML = "";
-
-      const plans = [];
-      if (buys && buys[0]) plans.push(buildExecutionPlan("BUY", buys[0], currentClose, avgRange));
-      if (sells && sells[0]) plans.push(buildExecutionPlan("SELL", sells[0], currentClose, avgRange));
-
-      plans.forEach(p => {
-        const isBuy = p.direction === "BUY";
-        const accentBorder = isBuy ? "border-l-4 border-l-emerald-400" : "border-l-4 border-l-red-500";
-        const badgeClass = isBuy
-          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-          : "bg-red-500/20 text-red-300 border border-red-500/30";
-
-        execContainer.innerHTML += `
-          <div class="luxury-card rounded-2xl p-3.5 ${accentBorder} space-y-2.5">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-black px-2 py-0.5 rounded ${badgeClass}">${p.label}</span>
-                <span class="text-[10px] font-bold text-slate-400">${ACTIVE_PAIR} • ${currentTf} • ${tradingMode}</span>
-              </div>
-              <span class="text-[10px] text-amber-300/90 font-semibold">R:R 1:1.5 / 2.5 / 4.0</span>
-            </div>
-            <p class="text-[11px] text-slate-400">${p.reason}</p>
-            <div class="grid grid-cols-3 gap-1.5 text-center font-mono-num">
-              <div class="bg-[#070b14] border border-amber-400/25 rounded-xl p-2">
-                <div class="text-[9px] text-amber-300 font-bold">RE-ENTRY</div>
-                <div class="text-xs font-extrabold text-white mt-0.5">${p.reentry.toFixed(2)}</div>
-              </div>
-              <div class="bg-[#070b14] border border-blue-400/30 rounded-xl p-2">
-                <div class="text-[9px] text-blue-300 font-bold">ENTRY</div>
-                <div class="text-xs font-extrabold text-white mt-0.5">${p.entry.toFixed(2)}</div>
-              </div>
-              <div class="bg-[#070b14] border border-red-500/35 rounded-xl p-2">
-                <div class="text-[9px] text-red-400 font-bold">SL</div>
-                <div class="text-xs font-extrabold text-red-300 mt-0.5">${p.sl.toFixed(2)}</div>
-              </div>
-              <div class="bg-[#070b14] border border-emerald-500/25 rounded-xl p-2">
-                <div class="text-[9px] text-emerald-300 font-bold">TP 1</div>
-                <div class="text-xs font-extrabold text-emerald-300 mt-0.5">${p.tp1.toFixed(2)}</div>
-              </div>
-              <div class="bg-[#070b14] border border-emerald-500/35 rounded-xl p-2">
-                <div class="text-[9px] text-emerald-400 font-bold">TP 2</div>
-                <div class="text-xs font-extrabold text-emerald-300 mt-0.5">${p.tp2.toFixed(2)}</div>
-              </div>
-              <div class="bg-[#070b14] border border-amber-400/35 rounded-xl p-2">
-                <div class="text-[9px] text-amber-300 font-bold">TP 3</div>
-                <div class="text-xs font-extrabold text-amber-200 mt-0.5">${p.tp3.toFixed(2)}</div>
-              </div>
-            </div>
-          </div>`;
-      });
-    }
-
-    function detectAndDrawZones(candles) {
-      clearZones();
-      if (!candles || candles.length < 18) return;
-
-      const currentClose = candles[candles.length - 1].close;
-      const avgRange = computeAverageCandleRange(candles);
-      const pipMult = 10;
-      const { sells, buys } = detectAreas(candles);
-
-      const zoneSummaryEl = document.getElementById("zoneOverlayList");
-      const signalContainer = document.getElementById("signalCardsContainer");
-      zoneSummaryEl.innerHTML = "";
-      signalContainer.innerHTML = "";
-
-      sells.forEach((z) => {
-        const pips = Math.max(1, Math.round(Math.abs(z.price - currentClose) * pipMult));
-        const title = `${z.tag} ${pips}p`;
-        const line = candleSeries.createPriceLine({
-          price: z.price,
-          color: "#ef4444",
-          lineWidth: 2,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-          axisLabelVisible: true,
-          title,
-        });
-        priceLines.push(line);
-
-        const plan = buildExecutionPlan("SELL", z, currentClose, avgRange);
-        zoneSummaryEl.innerHTML += `
-          <div class="bg-red-500/15 border border-red-500/30 rounded-lg px-2.5 py-1.5 flex justify-between items-center">
-            <span class="font-bold text-red-400">${title}</span>
-            <span class="font-mono-num text-slate-200">${z.price.toFixed(2)}</span>
-          </div>`;
-
-        signalContainer.innerHTML += `
-          <div class="luxury-card rounded-2xl p-3.5 border-l-4 border-l-red-500 space-y-2">
-            <div class="flex justify-between items-start">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-black text-red-400">SELL AREA</span>
-                  <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${ACTIVE_PAIR} • ${currentTf} • ${tradingMode}</span>
-                </div>
-                <div class="text-xs text-slate-400 mt-1">${z.reason}</div>
-              </div>
-              <div class="text-right font-mono-num">
-                <div class="text-sm font-extrabold text-white">${z.price.toFixed(2)}</div>
-                <div class="text-[10px] text-red-400">${pips} pips</div>
-              </div>
-            </div>
-            <div class="grid grid-cols-3 gap-1 text-[10px] font-mono-num pt-1 border-t border-slate-800/80">
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-amber-300">RE-ENTRY:</span> <b>${plan.reentry.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-blue-300">ENTRY:</span> <b>${plan.entry.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-red-400">SL:</span> <b>${plan.sl.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-emerald-300">TP1:</span> <b>${plan.tp1.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-emerald-400">TP2:</span> <b>${plan.tp2.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-amber-200">TP3:</span> <b>${plan.tp3.toFixed(2)}</b></div>
-            </div>
-          </div>`;
-      });
-
-      buys.forEach((z) => {
-        const pips = Math.max(1, Math.round(Math.abs(currentClose - z.price) * pipMult));
-        const title = `${z.tag} ${pips}p`;
-        const line = candleSeries.createPriceLine({
-          price: z.price,
-          color: "#10b981",
-          lineWidth: 2,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-          axisLabelVisible: true,
-          title,
-        });
-        priceLines.push(line);
-
-        const plan = buildExecutionPlan("BUY", z, currentClose, avgRange);
-        zoneSummaryEl.innerHTML += `
-          <div class="bg-emerald-500/15 border border-emerald-500/30 rounded-lg px-2.5 py-1.5 flex justify-between items-center">
-            <span class="font-bold text-emerald-400">${title}</span>
-            <span class="font-mono-num text-slate-200">${z.price.toFixed(2)}</span>
-          </div>`;
-
-        signalContainer.innerHTML += `
-          <div class="luxury-card rounded-2xl p-3.5 border-l-4 border-l-emerald-500 space-y-2">
-            <div class="flex justify-between items-start">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-black text-emerald-400">BUY AREA</span>
-                  <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${ACTIVE_PAIR} • ${currentTf} • ${tradingMode}</span>
-                </div>
-                <div class="text-xs text-slate-400 mt-1">${z.reason}</div>
-              </div>
-              <div class="text-right font-mono-num">
-                <div class="text-sm font-extrabold text-white">${z.price.toFixed(2)}</div>
-                <div class="text-[10px] text-emerald-400">${pips} pips</div>
-              </div>
-            </div>
-            <div class="grid grid-cols-3 gap-1 text-[10px] font-mono-num pt-1 border-t border-slate-800/80">
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-amber-300">RE-ENTRY:</span> <b>${plan.reentry.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-blue-300">ENTRY:</span> <b>${plan.entry.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-red-400">SL:</span> <b>${plan.sl.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-emerald-300">TP1:</span> <b>${plan.tp1.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-emerald-400">TP2:</span> <b>${plan.tp2.toFixed(2)}</b></div>
-              <div class="bg-[#070b14] rounded px-2 py-1"><span class="text-amber-200">TP3:</span> <b>${plan.tp3.toFixed(2)}</b></div>
-            </div>
-          </div>`;
-      });
-
-      renderExecutionPlans(buys, sells, currentClose, avgRange);
-    }
-
-    function checkZoneHits(currentPrice) {
-      if (!lastCandles || lastCandles.length < 18) return;
-      const { sells, buys } = detectAreas(lastCandles);
-      const tolerance = 0.5;
-
-      sells.forEach((z, idx) => {
-        const key = `${ACTIVE_PAIR}-${currentTf}-${tradingMode}-SELL-${idx}-${z.price.toFixed(2)}`;
-        if (Math.abs(currentPrice - z.price) <= tolerance && !alertedZones.has(key)) {
-          alertedZones.add(key);
-          triggerZoneNotification(
-            `ADLI FX (${tradingMode}): XAUUSD SELL AREA`,
-            `Harga ${currentPrice.toFixed(2)} sampai SELL AREA @ ${z.price.toFixed(2)} (${currentTf})`
-          );
-        }
-      });
-
-      buys.forEach((z, idx) => {
-        const key = `${ACTIVE_PAIR}-${currentTf}-${tradingMode}-BUY-${idx}-${z.price.toFixed(2)}`;
-        if (Math.abs(currentPrice - z.price) <= tolerance && !alertedZones.has(key)) {
-          alertedZones.add(key);
-          triggerZoneNotification(
-            `ADLI FX (${tradingMode}): XAUUSD BUY AREA`,
-            `Harga ${currentPrice.toFixed(2)} sampai BUY AREA @ ${z.price.toFixed(2)} (${currentTf})`
-          );
-        }
-      });
-    }
-
-    function applyCandlesToChart(candles, sourceLabel, isRealtimeBadge = true, seqId = loadSeq) {
-      if (seqId !== loadSeq) return;
-      if (!Array.isArray(candles) || candles.length === 0) return;
-
-      const latestClose = candles[candles.length - 1].close;
-      if (Number.isFinite(latestClose) && latestClose > 0) {
-        xauReferencePrice = latestClose;
-      }
-
-      candleSeries.applyOptions({
-        priceFormat: {
-          type: "price",
-          precision: 2,
-          minMove: 0.01,
-        },
-      });
-      chart.priceScale("right").applyOptions({ autoScale: true });
-
-      lastCandles = candles;
-      candleSeries.setData(lastCandles);
-      detectAndDrawZones(lastCandles);
-      updatePriceHeader(lastCandles);
-      checkZoneHits(lastCandles[lastCandles.length - 1].close);
-      chart.timeScale().fitContent();
-
-      document.getElementById("feedSourceLabel").innerText = sourceLabel;
-      const badge = document.getElementById("connectionBadge");
-      if (isRealtimeBadge) {
-        badge.innerText = "XAUUSD LIVE";
-        badge.className = "text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
-      } else {
-        badge.innerText = "AUTO SYNC";
-        badge.className = "text-[10px] font-bold px-2 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30";
-      }
-    }
-
-    function startLightXauTick(seqId) {
-      tickInterval = setInterval(() => {
-        if (seqId !== loadSeq || !lastCandles || lastCandles.length === 0) return;
-        const idx = lastCandles.length - 1;
-        const prevBar = lastCandles[idx];
-        const drift = (Math.random() - 0.5) * 0.16;
-        const nextClose = Math.max(10, Number((prevBar.close + drift).toFixed(2)));
-        const updatedBar = {
-          time: prevBar.time,
-          open: prevBar.open,
-          high: Number(Math.max(prevBar.high, nextClose).toFixed(2)),
-          low: Number(Math.min(prevBar.low, nextClose).toFixed(2)),
-          close: nextClose,
-        };
-        lastCandles[idx] = updatedBar;
-        candleSeries.update(updatedBar);
-        updatePriceHeader(lastCandles);
-        checkZoneHits(nextClose);
-      }, 900);
-    }
-
-    async function loadMarketData() {
-      loadSeq += 1;
-      const seqId = loadSeq;
-      const targetTf = currentTf;
-
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-      }
-      if (tickInterval) {
-        clearInterval(tickInterval);
-        tickInterval = null;
-      }
-      clearZones();
-      requestNotifPermission();
-
-      document.getElementById("activeTfBadge").innerText = targetTf;
-      document.getElementById("activeModeBadge").innerText = tradingMode;
-      document.getElementById("signalModeLabel").innerText = tradingMode;
-
-      const initialCandles = generateXauCandles(targetTf, xauReferencePrice);
-      applyCandlesToChart(initialCandles, `XAUUSD • Syncing ${targetTf}...`, false, seqId);
-      startLightXauTick(seqId);
-
-      fetchXauFeed(targetTf, seqId);
-      pollInterval = setInterval(() => {
-        fetchXauFeed(targetTf, seqId);
-      }, 5000);
-    }
-
-    async function fetchXauFeed(expectedTf, seqId) {
-      try {
-        const tfMapTwelve = { M1: "1min", M5: "5min", M15: "15min", M30: "30min", H1: "1h", H4: "4h", D1: "1day" };
-        const interval = tfMapTwelve[expectedTf];
-        const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent("XAU/USD")}&interval=${interval}&outputsize=80&apikey=${apiKey}`;
-        const res = await fetch(url);
-        const json = await res.json();
-        if (seqId !== loadSeq || currentTf !== expectedTf) return;
-
-        if (json.values && Array.isArray(json.values) && json.values.length > 0) {
-          const candles = json.values.reverse().map(v => ({
-            time: Math.floor(new Date(v.datetime.replace(" ", "T") + "Z").getTime() / 1000),
-            open: parseFloat(v.open),
-            high: parseFloat(v.high),
-            low: parseFloat(v.low),
-            close: parseFloat(v.close),
-          }));
-          applyCandlesToChart(candles, `XAUUSD Live Feed (${expectedTf})`, true, seqId);
-        }
-      } catch (err) {}
-    }
-
-    function updatePriceHeader(candles) {
-      if (!candles || candles.length < 2) return;
-      const latest = candles[candles.length - 1].close;
-      const prev = candles[0].open;
-      const diff = latest - prev;
-      const pct = ((diff / prev) * 100).toFixed(2);
-      const isUp = diff >= 0;
-
-      document.getElementById("livePriceDisplay").innerText = latest.toFixed(2);
-      const chgEl = document.getElementById("priceChangeDisplay");
-      chgEl.innerText = `${isUp ? "+" : ""}${diff.toFixed(2)} (${isUp ? "+" : ""}${pct}%)`;
-      chgEl.className = `font-mono-num text-[11px] font-semibold ${isUp ? "text-emerald-400" : "text-red-400"}`;
-    }
-
-    function setTradingMode(mode) {
-      tradingMode = mode;
-      document.getElementById("activeModeBadge").innerText = mode;
-      document.getElementById("signalModeLabel").innerText = mode;
-      document.getElementById("mode-SCALPING").className =
-        mode === "SCALPING"
-          ? "px-2 py-0.5 rounded font-bold bg-blue-600 text-white"
-          : "px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300";
-      document.getElementById("mode-INTRADAY").className =
-        mode === "INTRADAY"
-          ? "px-2 py-0.5 rounded font-bold bg-blue-600 text-white"
-          : "px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300";
-
-      if (lastCandles && lastCandles.length > 0) {
-        detectAndDrawZones(lastCandles);
-        checkZoneHits(lastCandles[lastCandles.length - 1].close);
-      }
-    }
-
-    function selectTimeframe(tf) {
-      currentTf = tf;
-      document.querySelectorAll(".tf-btn").forEach(btn => {
-        btn.className = "tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400";
-      });
-      document.getElementById(`tf-${tf}`).className = "tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white";
-      loadMarketData();
-    }
-
-    function refreshCurrentChart() {
-      loadMarketData();
-    }
-
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-view").forEach(v => v.classList.add("hidden"));
-      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
-
-      document.querySelectorAll(".nav-btn").forEach(b => {
-        b.classList.remove("text-blue-400");
-        b.classList.add("text-slate-400");
-      });
-      const activeNav = document.getElementById(`nav-${tabName}`);
-      if (activeNav && tabName !== "signal") {
-        activeNav.classList.remove("text-slate-400");
-        activeNav.classList.add("text-blue-400");
-      }
-      if (tabName === "chart") {
-        fitChartToContainer(false);
-      }
-    }
-
-    function calculateLot() {
-      const bal = parseFloat(document.getElementById("calcBalance").value) || 0;
-      const riskPct = parseFloat(document.getElementById("calcRisk").value) || 0;
-      const slPips = parseFloat(document.getElementById("calcSL").value) || 1;
-      const riskUsd = bal * (riskPct / 100);
-      const lot = riskUsd / (slPips * 10);
-      document.getElementById("calcRiskUsd").innerText = `Risk Amount: $${riskUsd.toFixed(2)}`;
-      document.getElementById("calcLotResult").innerText = Math.max(0.01, lot).toFixed(2);
-    }
-
-    function openSettingsModal() {
-      document.getElementById("apiKeyInput").value = apiKey;
-      document.getElementById("tgTokenInput").value = tgToken;
-      document.getElementById("tgChatInput").value = tgChatId;
-      document.getElementById("settingsModal").classList.remove("hidden");
-      document.getElementById("settingsModal").classList.add("flex");
-    }
-
-    function closeSettingsModal() {
-      document.getElementById("settingsModal").classList.add("hidden");
-      document.getElementById("settingsModal").classList.remove("flex");
-    }
-
-    function saveApiKey() {
-      const keyVal = document.getElementById("apiKeyInput").value.trim();
-      const tokenVal = document.getElementById("tgTokenInput").value.trim();
-      const chatVal = document.getElementById("tgChatInput").value.trim();
-
-      if (keyVal) {
-        apiKey = keyVal;
-        localStorage.setItem("adlifx_td_key", keyVal);
-      }
-      tgToken = tokenVal;
-      tgChatId = chatVal;
-      localStorage.setItem("adlifx_tg_token", tokenVal);
-      localStorage.setItem("adlifx_tg_chat", chatVal);
-
-      closeSettingsModal();
-      loadMarketData();
-    }
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
-      }).catch(() => {});
-    }
-
-    window.onload = () => {
-      const rawSession = localStorage.getItem("adlifx_member_session");
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed && parsed.label) {
-            unlockTerminal(parsed.label, parsed.role || "member");
-            return;
-          }
-        } catch (e) {
-          unlockTerminal(rawSession, "member");
-        }
-      }
-    };
-  </script>
 </body>
 </html>
