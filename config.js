@@ -24,13 +24,12 @@ window.ADLI_CONFIG = {
     ],
 
     // SUPABASE
-    SUPABASE_URL: "YOUR_SUPABASE_PROJECT_URL",
+    SUPABASE_URL: "https://rgdeexhlbszajcgfysnc.supabase.co",
 
-    SUPABASE_KEY: "YOUR_SUPABASE_PUBLISHABLE_KEY",
+    SUPABASE_KEY: "sb_publishable_HxM7ZqdewVaw4lJxMGnl7w_p8rks-1U",
 
     // MARKET DATA
     MARKET_PROVIDER: "TWELVE_DATA",
-
     MARKET_DATA_ENABLED: false,
 
     // DASHBOARD
@@ -74,5 +73,4 @@ window.ADLI_CONFIG = {
 
 };
 
-// PREVENT ACCIDENTAL CONFIG REPLACEMENT
 Object.freeze(window.ADLI_CONFIG);
