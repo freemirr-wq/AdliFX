@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#070b14" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.json" />
   <title>ADLI FX — Live Terminal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -272,4 +275,383 @@
 
       <!-- CENTER ORB SIGNAL BUTTON -->
       <div class="flex flex-col items-center justify-center -mt-6">
-        <button onclick="switchTab('signal')" id="nav-signal" class="red-orb w-14 h-14 rounded-full flex items-center justify-cent
+        <button onclick="switchTab('signal')" id="nav-signal" class="red-orb w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-xs tracking-tighter text-white border-2 border-red-300/40 active:scale-95 transition-transform">
+          AFX
+        </button>
+        <span class="text-[9px] font-bold tracking-wider text-slate-300 mt-1">SIGNAL</span>
+      </div>
+
+      <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
+        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        <span class="text-[9px] font-bold tracking-wider">PLANNER</span>
+      </button>
+
+      <button onclick="switchTab('news')" id="nav-news" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
+        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="text-[9px] font-bold tracking-wider">NEWS</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- API KEY SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card w-full max-w-sm rounded-2xl p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base">ADLI FX • Live Feed API</h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        API Key Twelve Data anda sudah dipasang secara automatik untuk XAUUSD & XTIUSD. BTCUSD menggunakan suapan langsung Binance.
+      </p>
+      <div>
+        <label class="text-[11px] text-slate-300 font-semibold block mb-1">Twelve Data API Key</label>
+        <input id="apiKeyInput" type="text" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-num text-emerald-400 focus:outline-none focus:border-blue-500" />
+      </div>
+      <button onclick="saveApiKey()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white shadow-lg shadow-blue-950">
+        Simpan & Aktifkan Live Data
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_API_KEY = "86e67a606d104c72be5fe7308ee22a9f";
+    let apiKey = localStorage.getItem("adlifx_td_key") || DEFAULT_API_KEY;
+    let currentPair = "XAUUSD";
+    let currentTf = "M15";
+    let chart, candleSeries, priceLines = [];
+    let liveInterval = null;
+    let btcSocket = null;
+    let lastCandles = [];
+
+    const tfMapTwelve = {
+      M1: "1min", M5: "5min", M15: "15min", M30: "30min", H1: "1h", H4: "4h", D1: "1day"
+    };
+    const tfMapBinance = {
+      M1: "1m", M5: "5m", M15: "15m", M30: "30m", H1: "1h", H4: "4h", D1: "1d"
+    };
+    const symbolMapTwelve = {
+      XAUUSD: "XAU/USD",
+      XTIUSD: "WTI/USD"
+    };
+
+    function initChart() {
+      const container = document.getElementById("chartContainer");
+      chart = LightweightCharts.createChart(container, {
+        layout: {
+          background: { color: "#090e1a" },
+          textColor: "#94a3b8",
+          fontSize: 11,
+        },
+        grid: {
+          vertLines: { color: "rgba(30, 41, 59, 0.45)" },
+          horzLines: { color: "rgba(30, 41, 59, 0.45)" },
+        },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: "#1e293b" },
+        timeScale: { borderColor: "#1e293b", timeVisible: true, secondsVisible: false },
+      });
+
+      candleSeries = chart.addCandlestickSeries({
+        upColor: "#3b82f6",
+        downColor: "#ef4444",
+        borderUpColor: "#3b82f6",
+        borderDownColor: "#ef4444",
+        wickUpColor: "#60a5fa",
+        wickDownColor: "#f87171",
+      });
+
+      window.addEventListener("resize", () => {
+        chart.applyOptions({ width: container.clientWidth });
+      });
+    }
+
+    function clearZones() {
+      priceLines.forEach(line => candleSeries.removePriceLine(line));
+      priceLines = [];
+    }
+
+    function detectAndDrawZones(candles) {
+      clearZones();
+      if (!candles || candles.length < 15) return;
+
+      const currentClose = candles[candles.length - 1].close;
+      const pipMult = currentPair === "XAUUSD" ? 10 : (currentPair === "BTCUSD" ? 1 : 100);
+
+      let swingHighs = [];
+      let swingLows = [];
+
+      for (let i = 3; i < candles.length - 3; i++) {
+        const h = candles[i].high;
+        const l = candles[i].low;
+        if (h > candles[i-1].high && h > candles[i-2].high && h > candles[i+1].high && h > candles[i+2].high) {
+          swingHighs.push(h);
+        }
+        if (l < candles[i-1].low && l < candles[i-2].low && l < candles[i+1].low && l < candles[i+2].low) {
+          swingLows.push(l);
+        }
+      }
+
+      const topResistances = [...new Set(swingHighs.filter(p => p > currentClose))].sort((a, b) => a - b).slice(0, 2);
+      const topSupports = [...new Set(swingLows.filter(p => p < currentClose))].sort((a, b) => b - a).slice(0, 2);
+
+      const zoneSummaryEl = document.getElementById("zoneOverlayList");
+      const signalContainer = document.getElementById("signalCardsContainer");
+      zoneSummaryEl.innerHTML = "";
+      signalContainer.innerHTML = "";
+
+      topResistances.forEach((price, idx) => {
+        const pips = Math.round(Math.abs(price - currentClose) * pipMult);
+        const label = idx === 0 ? `SELL ${pips}p` : `SELL FLIP ${pips}p`;
+        const line = candleSeries.createPriceLine({
+          price: price,
+          color: "#ef4444",
+          lineWidth: 2,
+          lineStyle: LightweightCharts.LineStyle.Solid,
+          axisLabelVisible: true,
+          title: label,
+        });
+        priceLines.push(line);
+
+        zoneSummaryEl.innerHTML += `
+          <div class="bg-red-500/15 border border-red-500/30 rounded-lg px-2.5 py-1.5 flex justify-between items-center">
+            <span class="font-bold text-red-400">${label}</span>
+            <span class="font-mono-num text-slate-200">${price.toFixed(2)}</span>
+          </div>`;
+
+        signalContainer.innerHTML += `
+          <div class="glass-card rounded-2xl p-3.5 border-l-4 border-l-red-500 flex justify-between items-center">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold text-red-400">${label}</span>
+                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf}</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-1">Supply Flip Zone • Target +${Math.max(40, Math.round(pips*0.8))} pips</div>
+            </div>
+            <div class="text-right font-mono-num">
+              <div class="text-sm font-bold text-white">${price.toFixed(2)}</div>
+              <div class="text-[10px] text-red-400">LIMIT SELL</div>
+            </div>
+          </div>`;
+      });
+
+      topSupports.forEach((price, idx) => {
+        const pips = Math.round(Math.abs(currentClose - price) * pipMult);
+        const label = idx === 0 ? `BUY ${pips}p` : `BUY FLIP ${pips}p`;
+        const line = candleSeries.createPriceLine({
+          price: price,
+          color: "#10b981",
+          lineWidth: 2,
+          lineStyle: LightweightCharts.LineStyle.Solid,
+          axisLabelVisible: true,
+          title: label,
+        });
+        priceLines.push(line);
+
+        zoneSummaryEl.innerHTML += `
+          <div class="bg-emerald-500/15 border border-emerald-500/30 rounded-lg px-2.5 py-1.5 flex justify-between items-center">
+            <span class="font-bold text-emerald-400">${label}</span>
+            <span class="font-mono-num text-slate-200">${price.toFixed(2)}</span>
+          </div>`;
+
+        signalContainer.innerHTML += `
+          <div class="glass-card rounded-2xl p-3.5 border-l-4 border-l-emerald-500 flex justify-between items-center">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold text-emerald-400">${label}</span>
+                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf}</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-1">Demand Flip Zone • Target +${Math.max(40, Math.round(pips*0.8))} pips</div>
+            </div>
+            <div class="text-right font-mono-num">
+              <div class="text-sm font-bold text-white">${price.toFixed(2)}</div>
+              <div class="text-[10px] text-emerald-400">LIMIT BUY</div>
+            </div>
+          </div>`;
+      });
+    }
+
+    async function loadMarketData() {
+      if (liveInterval) clearInterval(liveInterval);
+      if (btcSocket) { btcSocket.close(); btcSocket = null; }
+
+      document.getElementById("activePairTitle").innerText = currentPair;
+      document.getElementById("activeTfBadge").innerText = currentTf;
+
+      if (currentPair === "BTCUSD") {
+        document.getElementById("feedSourceLabel").innerText = "Binance Real-Time WebSocket";
+        await fetchBinanceHistory();
+        startBinanceSocket();
+      } else {
+        document.getElementById("feedSourceLabel").innerText = "Twelve Data Live API";
+        await fetchTwelveData();
+        liveInterval = setInterval(fetchTwelveData, 20000);
+      }
+    }
+
+    async function fetchBinanceHistory() {
+      try {
+        const interval = tfMapBinance[currentTf];
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=80`);
+        const data = await res.json();
+        lastCandles = data.map(d => ({
+          time: Math.floor(d[0] / 1000),
+          open: parseFloat(d[1]),
+          high: parseFloat(d[2]),
+          low: parseFloat(d[3]),
+          close: parseFloat(d[4]),
+        }));
+        candleSeries.setData(lastCandles);
+        detectAndDrawZones(lastCandles);
+        updatePriceHeader(lastCandles);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function startBinanceSocket() {
+      const interval = tfMapBinance[currentTf];
+      btcSocket = new WebSocket(`wss://stream.binance.com:9443/ws/btcusdt@kline_${interval}`);
+      btcSocket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        const k = msg.k;
+        const bar = {
+          time: Math.floor(k.t / 1000),
+          open: parseFloat(k.o),
+          high: parseFloat(k.h),
+          low: parseFloat(k.l),
+          close: parseFloat(k.c),
+        };
+        candleSeries.update(bar);
+        if (lastCandles.length > 0) {
+          lastCandles[lastCandles.length - 1] = bar;
+          updatePriceHeader(lastCandles);
+        }
+      };
+    }
+
+    async function fetchTwelveData() {
+      try {
+        const sym = symbolMapTwelve[currentPair];
+        const interval = tfMapTwelve[currentTf];
+        const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${interval}&outputsize=80&apikey=${apiKey}`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (json.values && Array.isArray(json.values)) {
+          lastCandles = json.values.reverse().map(v => ({
+            time: Math.floor(new Date(v.datetime.replace(" ", "T") + "Z").getTime() / 1000),
+            open: parseFloat(v.open),
+            high: parseFloat(v.high),
+            low: parseFloat(v.low),
+            close: parseFloat(v.close),
+          }));
+          candleSeries.setData(lastCandles);
+          detectAndDrawZones(lastCandles);
+          updatePriceHeader(lastCandles);
+          document.getElementById("connectionBadge").innerText = "LIVE FEED";
+          document.getElementById("connectionBadge").className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+        } else {
+          document.getElementById("connectionBadge").innerText = "API LIMIT / MARKET CLOSED";
+          document.getElementById("connectionBadge").className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30";
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function updatePriceHeader(candles) {
+      if (!candles || candles.length < 2) return;
+      const latest = candles[candles.length - 1].close;
+      const prev = candles[0].open;
+      const diff = latest - prev;
+      const pct = ((diff / prev) * 100).toFixed(2);
+      const isUp = diff >= 0;
+
+      document.getElementById("livePriceDisplay").innerText = latest.toFixed(2);
+      const chgEl = document.getElementById("priceChangeDisplay");
+      chgEl.innerText = `${isUp ? "+" : ""}${diff.toFixed(2)} (${isUp ? "+" : ""}${pct}%)`;
+      chgEl.className = `font-mono-num text-[11px] font-semibold ${isUp ? "text-emerald-400" : "text-red-400"}`;
+    }
+
+    function selectPair(pair) {
+      currentPair = pair;
+      document.querySelectorAll(".pair-btn").forEach(btn => {
+        btn.className = "pair-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+      });
+      document.getElementById(`pair-${pair}`).className = "pair-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-950/60";
+      loadMarketData();
+    }
+
+    function selectTimeframe(tf) {
+      currentTf = tf;
+      document.querySelectorAll(".tf-btn").forEach(btn => {
+        btn.className = "tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400";
+      });
+      document.getElementById(`tf-${tf}`).className = "tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white";
+      loadMarketData();
+    }
+
+    function refreshCurrentChart() {
+      loadMarketData();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-view").forEach(v => v.classList.add("hidden"));
+      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
+
+      document.querySelectorAll(".nav-btn").forEach(b => {
+        b.classList.remove("text-blue-400");
+        b.classList.add("text-slate-400");
+      });
+      const activeNav = document.getElementById(`nav-${tabName}`);
+      if (activeNav && tabName !== "signal") {
+        activeNav.classList.remove("text-slate-400");
+        activeNav.classList.add("text-blue-400");
+      }
+    }
+
+    function calculateLot() {
+      const bal = parseFloat(document.getElementById("calcBalance").value) || 0;
+      const riskPct = parseFloat(document.getElementById("calcRisk").value) || 0;
+      const slPips = parseFloat(document.getElementById("calcSL").value) || 1;
+      const riskUsd = bal * (riskPct / 100);
+      const lot = riskUsd / (slPips * 10);
+      document.getElementById("calcRiskUsd").innerText = `Risk Amount: $${riskUsd.toFixed(2)}`;
+      document.getElementById("calcLotResult").innerText = Math.max(0.01, lot).toFixed(2);
+    }
+
+    function openSettingsModal() {
+      document.getElementById("apiKeyInput").value = apiKey;
+      document.getElementById("settingsModal").classList.remove("hidden");
+      document.getElementById("settingsModal").classList.add("flex");
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("settingsModal").classList.add("hidden");
+      document.getElementById("settingsModal").classList.remove("flex");
+    }
+
+    function saveApiKey() {
+      const val = document.getElementById("apiKeyInput").value.trim();
+      if (val) {
+        apiKey = val;
+        localStorage.setItem("adlifx_td_key", val);
+        closeSettingsModal();
+        loadMarketData();
+      }
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
+      });
+    }
+
+    window.onload = () => {
+      initChart();
+      loadMarketData();
+      calculateLot();
+    };
+  </script>
+</body>
+</html>
