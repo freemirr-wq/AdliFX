@@ -161,7 +161,7 @@
               <span id="activeTfBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">M15</span>
               <span id="activeModeBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">SCALPING</span>
             </div>
-            <div id="feedSourceLabel" class="text-[11px] text-slate-400 mt-0.5">XAUUSD Realtime Engine</div>
+            <div id="feedSourceLabel" class="text-[11px] text-slate-400 mt-0.5">Menyegerakkan data semasa...</div>
           </div>
           <div class="text-right">
             <div id="livePriceDisplay" class="font-mono-num text-xl font-extrabold text-white">---.--</div>
@@ -358,7 +358,8 @@
     let currentTf = "M15";
     let tradingMode = "SCALPING";
     let chart, candleSeries, priceLines = [];
-    let liveInterval = null;
+    let pollInterval = null;
+    let tickInterval = null;
     let streamSocket = null;
     let lastCandles = [];
     let alertedZones = new Set();
@@ -417,11 +418,8 @@
         initChart();
         loadMarketData();
         calculateLot();
-      } else if (chart) {
-        const container = document.getElementById("chartContainer");
-        if (container.clientWidth > 0) {
-          chart.applyOptions({ width: container.clientWidth });
-        }
+      } else {
+        fitChartToContainer();
       }
     }
 
@@ -579,6 +577,12 @@
       sendTelegramAlert(`${title}\n${body}`);
     }
 
+    function getPrecisionForPair(pair) {
+      if (pair === "XTIUSD") return { precision: 2, minMove: 0.01 };
+      if (pair === "BTCUSD") return { precision: 2, minMove: 0.01 };
+      return { precision: 2, minMove: 0.01 };
+    }
+
     function initChart() {
       const container = document.getElementById("chartContainer");
       const width = container.clientWidth || 340;
@@ -595,7 +599,10 @@
           horzLines: { color: "rgba(30, 41, 59, 0.45)" },
         },
         crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-        rightPriceScale: { borderColor: "#1e293b" },
+        rightPriceScale: {
+          borderColor: "#1e293b",
+          autoScale: true,
+        },
         timeScale: { borderColor: "#1e293b", timeVisible: true, secondsVisible: false },
       });
 
@@ -608,17 +615,22 @@
         wickDownColor: "#f87171",
       });
 
-      window.addEventListener("resize", () => {
-        if (chart && container.clientWidth > 0) {
-          chart.applyOptions({ width: container.clientWidth });
-        }
-      });
+      window.addEventListener("resize", fitChartToContainer);
+    }
+
+    function fitChartToContainer() {
+      const container = document.getElementById("chartContainer");
+      if (chart && container && container.clientWidth > 0) {
+        chart.applyOptions({ width: container.clientWidth });
+        chart.priceScale("right").applyOptions({ autoScale: true });
+        chart.timeScale().fitContent();
+      }
     }
 
     function generatePairCandles(pair, tf) {
       const baseMap = { XAUUSD: 2685.50, BTCUSD: 94250.00, XTIUSD: 69.40 };
       const stepMap = { M1: 60, M5: 300, M15: 900, M30: 1800, H1: 3600, H4: 14400, D1: 86400 };
-      const volMap = { XAUUSD: 4.20, BTCUSD: 320.00, XTIUSD: 0.32 };
+      const volMap = { XAUUSD: 3.50, BTCUSD: 260.00, XTIUSD: 0.28 };
 
       let price = baseMap[pair] || 2685.50;
       const secStep = stepMap[tf] || 900;
@@ -626,7 +638,7 @@
       const now = Math.floor(Date.now() / 1000);
       const candles = [];
 
-      let seed = pair.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + tf.length * 19;
+      let seed = pair.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + tf.length * 23;
       const rand = () => {
         seed = (seed * 9301 + 49297) % 233280;
         return seed / 233280;
@@ -634,12 +646,12 @@
 
       for (let i = 89; i >= 0; i--) {
         const t = now - i * secStep;
-        const swing = Math.sin(i * 0.25) * vol * 0.65;
+        const swing = Math.sin(i * 0.25) * vol * 0.6;
         const delta = (rand() - 0.49) * vol + swing * 0.2;
         const open = price;
         const close = Math.max(0.1, open + delta);
-        const high = Math.max(open, close) + rand() * vol * 0.6;
-        const low = Math.min(open, close) - rand() * vol * 0.6;
+        const high = Math.max(open, close) + rand() * vol * 0.55;
+        const low = Math.min(open, close) - rand() * vol * 0.55;
 
         candles.push({
           time: t,
@@ -665,7 +677,7 @@
 
       const currentClose = candles[candles.length - 1].close;
       const lookback = tradingMode === "SCALPING" ? 2 : 3;
-      const maxDistPct = tradingMode === "SCALPING" ? 0.025 : 0.075;
+      const maxDistPct = tradingMode === "SCALPING" ? 0.02 : 0.06;
 
       let swings = [];
       for (let i = lookback; i < candles.length - lookback; i++) {
@@ -726,7 +738,7 @@
       }
 
       if (sells.length === 0) {
-        const offset = currentClose * (tradingMode === "SCALPING" ? 0.0035 : 0.011);
+        const offset = currentClose * (tradingMode === "SCALPING" ? 0.003 : 0.009);
         sells.push({
           price: Number((currentClose + offset).toFixed(2)),
           tag: "SELL AREA",
@@ -734,7 +746,7 @@
         });
       }
       if (buys.length === 0) {
-        const offset = currentClose * (tradingMode === "SCALPING" ? 0.0035 : 0.011);
+        const offset = currentClose * (tradingMode === "SCALPING" ? 0.003 : 0.009);
         buys.push({
           price: Number((currentClose - offset).toFixed(2)),
           tag: "BUY AREA",
@@ -867,35 +879,47 @@
       });
     }
 
-    function applyCandlesToChart(candles, sourceLabel, isRealtimeBadge = true, seqId = loadSeq) {
-      if (seqId !== loadSeq) return;
+    function applyCandlesToChart(candles, sourceLabel, isRealtimeBadge = true, seqId = loadSeq, pairContext = currentPair) {
+      if (seqId !== loadSeq || currentPair !== pairContext) return;
+      if (!Array.isArray(candles) || candles.length === 0) return;
+
+      const fmt = getPrecisionForPair(pairContext);
+      candleSeries.applyOptions({
+        priceFormat: {
+          type: "price",
+          precision: fmt.precision,
+          minMove: fmt.minMove,
+        },
+      });
+      chart.priceScale("right").applyOptions({ autoScale: true });
+
       lastCandles = candles;
       candleSeries.setData(lastCandles);
-      chart.timeScale().fitContent();
       detectAndDrawZones(lastCandles);
       updatePriceHeader(lastCandles);
       checkZoneHits(lastCandles[lastCandles.length - 1].close);
-      document.getElementById("feedSourceLabel").innerText = sourceLabel;
+      chart.timeScale().fitContent();
 
+      document.getElementById("feedSourceLabel").innerText = sourceLabel;
       const badge = document.getElementById("connectionBadge");
       if (isRealtimeBadge) {
         badge.innerText = "REALTIME FEED";
         badge.className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
       } else {
-        badge.innerText = "LIVE ENGINE";
+        badge.innerText = "AUTO SYNC";
         badge.className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30";
       }
     }
 
-    function startRealtimeTick(pair, seqId) {
-      const tickStepMap = { XAUUSD: 0.45, BTCUSD: 45.0, XTIUSD: 0.05 };
-      const step = tickStepMap[pair] || 0.45;
+    function startFastTick(pair, seqId) {
+      const tickStepMap = { XAUUSD: 0.25, BTCUSD: 25.0, XTIUSD: 0.03 };
+      const step = tickStepMap[pair] || 0.25;
 
-      liveInterval = setInterval(() => {
-        if (seqId !== loadSeq || !lastCandles || lastCandles.length === 0) return;
+      tickInterval = setInterval(() => {
+        if (seqId !== loadSeq || currentPair !== pair || !lastCandles || lastCandles.length === 0) return;
         const idx = lastCandles.length - 1;
         const prevBar = lastCandles[idx];
-        const drift = (Math.random() - 0.495) * step;
+        const drift = (Math.random() - 0.5) * step;
         const nextClose = Math.max(0.1, Number((prevBar.close + drift).toFixed(2)));
         const updatedBar = {
           time: prevBar.time,
@@ -908,7 +932,7 @@
         candleSeries.update(updatedBar);
         updatePriceHeader(lastCandles);
         checkZoneHits(nextClose);
-      }, 1500);
+      }, 650);
     }
 
     async function loadMarketData() {
@@ -917,14 +941,19 @@
       const targetPair = currentPair;
       const targetTf = currentTf;
 
-      if (liveInterval) {
-        clearInterval(liveInterval);
-        liveInterval = null;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+      if (tickInterval) {
+        clearInterval(tickInterval);
+        tickInterval = null;
       }
       if (streamSocket) {
         try { streamSocket.close(); } catch (e) {}
         streamSocket = null;
       }
+      clearZones();
       requestNotifPermission();
 
       document.getElementById("activePairTitle").innerText = targetPair;
@@ -932,15 +961,21 @@
       document.getElementById("activeModeBadge").innerText = tradingMode;
       document.getElementById("signalModeLabel").innerText = tradingMode;
 
-      const baseCandles = generatePairCandles(targetPair, targetTf);
-      applyCandlesToChart(baseCandles, `${targetPair} Realtime Tick`, false, seqId);
-      startRealtimeTick(targetPair, seqId);
+      const initialCandles = generatePairCandles(targetPair, targetTf);
+      applyCandlesToChart(initialCandles, `${targetPair} • Menyambung feed...`, false, seqId, targetPair);
+      startFastTick(targetPair, seqId);
 
       if (targetPair === "BTCUSD") {
-        await fetchBinanceExact("BTCUSDT", targetPair, targetTf, "BTCUSD Realtime Stream", seqId);
+        await fetchBinanceExact("BTCUSDT", targetPair, targetTf, "BTCUSD Live Stream", seqId);
         startBinanceSocket("btcusdt", targetPair, targetTf, seqId);
-      } else if (targetPair === "XAUUSD" || targetPair === "XTIUSD") {
+        pollInterval = setInterval(() => {
+          fetchBinanceExact("BTCUSDT", targetPair, targetTf, "BTCUSD Live Stream", seqId);
+        }, 4000);
+      } else {
         await fetchTwelveExact(targetPair, targetTf, seqId);
+        pollInterval = setInterval(() => {
+          fetchTwelveExact(targetPair, targetTf, seqId);
+        }, 4000);
       }
     }
 
@@ -960,7 +995,7 @@
             low: parseFloat(d[3]),
             close: parseFloat(d[4]),
           }));
-          applyCandlesToChart(candles, label, true, seqId);
+          applyCandlesToChart(candles, label, true, seqId, expectedPair);
         }
       } catch (e) {}
     }
@@ -1010,7 +1045,7 @@
             low: parseFloat(v.low),
             close: parseFloat(v.close),
           }));
-          applyCandlesToChart(candles, `${expectedPair} Live API`, true, seqId);
+          applyCandlesToChart(candles, `${expectedPair} Live Feed`, true, seqId, expectedPair);
         }
       } catch (err) {}
     }
@@ -1083,11 +1118,8 @@
         activeNav.classList.remove("text-slate-400");
         activeNav.classList.add("text-blue-400");
       }
-      if (tabName === "chart" && chart) {
-        const container = document.getElementById("chartContainer");
-        if (container.clientWidth > 0) {
-          chart.applyOptions({ width: container.clientWidth });
-        }
+      if (tabName === "chart") {
+        fitChartToContainer();
       }
     }
 
