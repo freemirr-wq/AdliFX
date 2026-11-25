@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="./manifest.json" />
-  <title>ADLI FX — Live Terminal</title>
+  <title>ADLI FX intel indicator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -24,9 +24,9 @@
       font-family: 'JetBrains Mono', monospace;
     }
     .glass-card {
-      background: linear-gradient(145deg, rgba(17, 25, 42, 0.9), rgba(10, 15, 28, 0.95));
-      border: 1px solid rgba(59, 130, 246, 0.15);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      background: linear-gradient(145deg, rgba(17, 25, 42, 0.92), rgba(10, 15, 28, 0.96));
+      border: 1px solid rgba(59, 130, 246, 0.16);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     }
     .red-orb {
       background: radial-gradient(circle at 35% 30%, #ff4d4d, #dc2626 55%, #7f1d1d 100%);
@@ -36,303 +36,488 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-24 select-none">
+<body class="min-h-screen flex flex-col justify-between select-none">
 
-  <!-- TOP HEADER -->
-  <header class="sticky top-0 z-30 bg-[#070b14]/95 backdrop-blur-md border-b border-slate-800/70 px-4 pt-3 pb-2.5">
-    <div class="flex items-center justify-between mb-2.5">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-rose-900 flex items-center justify-center font-extrabold text-sm tracking-tighter shadow-lg shadow-red-950/50 border border-red-400/30">
-          AFX
-        </div>
-        <div>
-          <div class="text-[10px] text-slate-400 leading-none">Hello,</div>
-          <div class="flex items-center gap-1.5 mt-0.5">
-            <span class="font-bold text-sm tracking-wide text-white">ADLI FX</span>
-            <span id="liveDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <span id="connectionBadge" class="text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-          LIVE FEED
-        </span>
-        <button onclick="openSettingsModal()" class="w-8 h-8 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center text-slate-300 active:scale-95">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- PAIR SWITCHER -->
-    <div class="grid grid-cols-3 gap-1.5 bg-[#0d1424] p-1 rounded-xl border border-slate-800">
-      <button onclick="selectPair('XAUUSD')" id="pair-XAUUSD" class="pair-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-950/60">
-        XAUUSD
-      </button>
-      <button onclick="selectPair('BTCUSD')" id="pair-BTCUSD" class="pair-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">
-        BTCUSD
-      </button>
-      <button onclick="selectPair('XTIUSD')" id="pair-XTIUSD" class="pair-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">
-        XTIUSD
-      </button>
-    </div>
-  </header>
-
-  <!-- MAIN CONTENT AREA -->
-  <main class="flex-1 px-3.5 pt-3 space-y-3">
-
-    <!-- TAB 1: CHART -->
-    <section id="tab-chart" class="tab-view space-y-3">
-      <!-- Price Ticker Bar -->
-      <div class="glass-card rounded-2xl p-3 flex items-center justify-between">
-        <div>
-          <div class="flex items-center gap-2">
-            <span id="activePairTitle" class="text-base font-extrabold tracking-wide">XAUUSD</span>
-            <span id="activeTfBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">M15</span>
-          </div>
-          <div id="feedSourceLabel" class="text-[11px] text-slate-400 mt-0.5">Twelve Data Live Feed</div>
-        </div>
-        <div class="text-right">
-          <div id="livePriceDisplay" class="font-mono-num text-xl font-extrabold text-white">---.--</div>
-          <div id="priceChangeDisplay" class="font-mono-num text-[11px] font-semibold text-emerald-400">Loading...</div>
-        </div>
-      </div>
-
-      <!-- Timeframe Selector -->
-      <div class="flex items-center justify-between gap-1 bg-[#0d1424] p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
-        <button onclick="selectTimeframe('M1')" id="tf-M1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M1</button>
-        <button onclick="selectTimeframe('M5')" id="tf-M5" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M5</button>
-        <button onclick="selectTimeframe('M15')" id="tf-M15" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white">M15</button>
-        <button onclick="selectTimeframe('M30')" id="tf-M30" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M30</button>
-        <button onclick="selectTimeframe('H1')" id="tf-H1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">H1</button>
-        <button onclick="selectTimeframe('H4')" id="tf-H4" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">H4</button>
-        <button onclick="selectTimeframe('D1')" id="tf-D1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">D1</button>
-      </div>
-
-      <!-- Chart Container -->
-      <div class="glass-card rounded-2xl p-2 relative overflow-hidden">
-        <div class="flex items-center justify-between px-2 pb-1.5 text-[10px] text-slate-400">
-          <span>KILLER ZONE • AUTO STRUCTURE</span>
-          <button onclick="refreshCurrentChart()" class="text-blue-400 font-semibold active:opacity-70">↻ Refresh</button>
-        </div>
-        <div id="chartContainer" class="w-full h-[340px] rounded-xl overflow-hidden"></div>
-
-        <!-- Active Zones Summary Bar -->
-        <div id="zoneOverlayList" class="mt-2 grid grid-cols-2 gap-1.5 text-[11px]"></div>
-      </div>
-
-      <p class="text-[10px] text-slate-500 text-center px-2 leading-relaxed">
-        Live Killer Zone marks swing supply & demand flip levels automatically. Confirm entries against your live MT4/MT5 spread.
-      </p>
-    </section>
-
-    <!-- TAB 2: STATS -->
-    <section id="tab-stats" class="tab-view hidden space-y-3">
-      <div class="glass-card rounded-2xl p-4">
-        <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Performance Analytics</h2>
-        <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="bg-[#0a101d] p-3 rounded-xl border border-slate-800">
-            <div class="text-[10px] text-slate-400">WIN RATE</div>
-            <div class="font-mono-num text-lg font-extrabold text-emerald-400 mt-1">78.4%</div>
-          </div>
-          <div class="bg-[#0a101d] p-3 rounded-xl border border-slate-800">
-            <div class="text-[10px] text-slate-400">NET PIPS</div>
-            <div class="font-mono-num text-lg font-extrabold text-blue-400 mt-1">+1,420</div>
-          </div>
-          <div class="bg-[#0a101d] p-3 rounded-xl border border-slate-800">
-            <div class="text-[10px] text-slate-400">RISK/REWARD</div>
-            <div class="font-mono-num text-lg font-extrabold text-amber-400 mt-1">1:3.2</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-card rounded-2xl p-4 space-y-2.5">
-        <h3 class="text-xs font-bold text-slate-300 uppercase">Pair Breakdown</h3>
-        <div class="flex justify-between items-center bg-[#0a101d] p-3 rounded-xl border border-slate-800/80">
-          <div>
-            <div class="font-bold text-sm">XAUUSD (Gold)</div>
-            <div class="text-[11px] text-slate-400">34 Setups • Scalping M15</div>
-          </div>
-          <span class="font-mono-num text-sm font-bold text-emerald-400">+890 pips</span>
-        </div>
-        <div class="flex justify-between items-center bg-[#0a101d] p-3 rounded-xl border border-slate-800/80">
-          <div>
-            <div class="font-bold text-sm">BTCUSD (Bitcoin)</div>
-            <div class="text-[11px] text-slate-400">19 Setups • Intraday H1</div>
-          </div>
-          <span class="font-mono-num text-sm font-bold text-emerald-400">+340 pips</span>
-        </div>
-        <div class="flex justify-between items-center bg-[#0a101d] p-3 rounded-xl border border-slate-800/80">
-          <div>
-            <div class="font-bold text-sm">XTIUSD (WTI Oil)</div>
-            <div class="text-[11px] text-slate-400">12 Setups • NY Session</div>
-          </div>
-          <span class="font-mono-num text-sm font-bold text-emerald-400">+190 pips</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 3: SIGNAL -->
-    <section id="tab-signal" class="tab-view hidden space-y-3">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-extrabold tracking-wide">AI KILLER ZONE SIGNALS</h2>
-        <span class="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold border border-red-500/30">AUTO SCANNER</span>
-      </div>
-      <div id="signalCardsContainer" class="space-y-2.5"></div>
-    </section>
-
-    <!-- TAB 4: PLANNER -->
-    <section id="tab-planner" class="tab-view hidden space-y-3">
-      <div class="glass-card rounded-2xl p-4 space-y-3">
-        <h2 class="text-sm font-extrabold tracking-wide">LOT & RISK CALCULATOR</h2>
-        <div>
-          <label class="text-[11px] text-slate-400 block mb-1">Account Balance (USD)</label>
-          <input id="calcBalance" type="number" value="1000" oninput="calculateLot()" class="w-full bg-[#0a101d] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
-        </div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="text-[11px] text-slate-400 block mb-1">Risk (%)</label>
-            <input id="calcRisk" type="number" value="2" step="0.5" oninput="calculateLot()" class="w-full bg-[#0a101d] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
-          </div>
-          <div>
-            <label class="text-[11px] text-slate-400 block mb-1">Stop Loss (Pips)</label>
-            <input id="calcSL" type="number" value="30" oninput="calculateLot()" class="w-full bg-[#0a101d] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
-          </div>
-        </div>
-        <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
-          <div>
-            <div class="text-[10px] text-blue-300 uppercase">Recommended Lot Size</div>
-            <div id="calcRiskUsd" class="text-[11px] text-slate-400">Risk Amount: $20.00</div>
-          </div>
-          <div id="calcLotResult" class="font-mono-num text-2xl font-extrabold text-blue-400">0.07</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 5: NEWS -->
-    <section id="tab-news" class="tab-view hidden space-y-3">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-[10px] text-slate-400 uppercase tracking-wider">Economic Calendar • Times in MYT</div>
-          <h2 class="text-lg font-extrabold">MARKET NEWS</h2>
-        </div>
-        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30">USD IMPACT</span>
-      </div>
-
-      <div class="rounded-2xl p-4 bg-gradient-to-br from-blue-600 to-indigo-900 shadow-lg shadow-blue-950/60 border border-blue-400/30">
-        <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-blue-100">
-          <span>• NEXT HIGH IMPACT</span>
-          <span class="bg-red-500/30 text-white px-2 py-0.5 rounded">HIGH IMPACT</span>
-        </div>
-        <div class="text-lg font-extrabold mt-2 leading-snug">US Core PCE & FOMC Rate Outlook</div>
-        <div class="flex items-center justify-between mt-3">
-          <span class="font-mono-num text-xl font-extrabold">21:30 MYT</span>
-          <span class="text-xs font-bold bg-white/15 px-3 py-1 rounded-full">Gold Volatility Alert</span>
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <div class="glass-card rounded-xl p-3 flex items-center justify-between border-l-4 border-l-red-500">
-          <div>
-            <div class="text-[10px] text-slate-400 font-mono-num">20:30 MYT • USD</div>
-            <div class="text-sm font-bold">Initial Jobless Claims</div>
-          </div>
-          <span class="text-[10px] font-bold px-2 py-1 rounded bg-red-500/20 text-red-400">HIGH</span>
-        </div>
-        <div class="glass-card rounded-xl p-3 flex items-center justify-between border-l-4 border-l-amber-500">
-          <div>
-            <div class="text-[10px] text-slate-400 font-mono-num">22:00 MYT • USD</div>
-            <div class="text-sm font-bold">ISM Services PMI</div>
-          </div>
-          <span class="text-[10px] font-bold px-2 py-1 rounded bg-amber-500/20 text-amber-400">MEDIUM</span>
-        </div>
-        <div class="glass-card rounded-xl p-3 flex items-center justify-between border-l-4 border-l-amber-500">
-          <div>
-            <div class="text-[10px] text-slate-400 font-mono-num">23:30 MYT • XTIUSD</div>
-            <div class="text-sm font-bold">EIA Crude Oil Inventories</div>
-          </div>
-          <span class="text-[10px] font-bold px-2 py-1 rounded bg-amber-500/20 text-amber-400">OIL IMPACT</span>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- BOTTOM NAVIGATION BAR -->
-  <nav class="fixed bottom-0 inset-x-0 z-40 bg-[#080d18]/95 backdrop-blur-lg border-t border-slate-800/90 px-2 py-1.5">
-    <div class="max-w-md mx-auto grid grid-cols-5 items-center text-center relative">
-      <button onclick="switchTab('chart')" id="nav-chart" class="nav-btn flex flex-col items-center justify-center py-1 text-blue-400">
-        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
-        <span class="text-[9px] font-bold tracking-wider">CHART</span>
-      </button>
-
-      <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
-        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        <span class="text-[9px] font-bold tracking-wider">STATS</span>
-      </button>
-
-      <!-- CENTER ORB SIGNAL BUTTON -->
-      <div class="flex flex-col items-center justify-center -mt-6">
-        <button onclick="switchTab('signal')" id="nav-signal" class="red-orb w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-xs tracking-tighter text-white border-2 border-red-300/40 active:scale-95 transition-transform">
-          AFX
-        </button>
-        <span class="text-[9px] font-bold tracking-wider text-slate-300 mt-1">SIGNAL</span>
-      </div>
-
-      <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
-        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-        <span class="text-[9px] font-bold tracking-wider">PLANNER</span>
-      </button>
-
-      <button onclick="switchTab('news')" id="nav-news" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
-        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        <span class="text-[9px] font-bold tracking-wider">NEWS</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- API KEY SETTINGS MODAL -->
-  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+  <!-- MEMBER AUTH GATE (DATABASE ACCESS CONTROL) -->
+  <div id="authGate" class="fixed inset-0 z-50 bg-[#070b14] flex items-center justify-center p-4 overflow-y-auto">
     <div class="glass-card w-full max-w-sm rounded-2xl p-5 space-y-4">
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-red-600 to-rose-900 flex items-center justify-center font-extrabold text-sm border border-red-400/30 shadow-lg">
+          AFX
+        </div>
+        <h1 class="text-base font-extrabold tracking-wide text-white pt-1">ADLI FX intel indicator</h1>
+        <p class="text-[11px] text-slate-400">Akses terhad untuk ahli berdaftar sahaja</p>
+      </div>
+
+      <!-- Mode Switch: Login vs Register -->
+      <div class="grid grid-cols-2 gap-1 bg-[#0a101d] p-1 rounded-xl border border-slate-800 text-xs font-bold">
+        <button onclick="switchAuthMode('login')" id="authTabLogin" class="py-1.5 rounded-lg bg-blue-600 text-white">Log Masuk</button>
+        <button onclick="switchAuthMode('register')" id="authTabRegister" class="py-1.5 rounded-lg text-slate-400">Daftar Ahli</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm" class="space-y-3">
+        <div>
+          <label class="text-[11px] text-slate-300 font-semibold block mb-1">Kod Akses Ahli</label>
+          <input id="loginCodeInput" type="text" placeholder="Contoh: ADLI-8899" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-mono-num text-white uppercase focus:outline-none focus:border-blue-500" />
+        </div>
+        <button onclick="handleMemberLogin()" id="loginBtn" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white shadow-lg shadow-blue-950">
+          Masuk Ke Terminal
+        </button>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="registerForm" class="hidden space-y-2.5">
+        <div>
+          <label class="text-[11px] text-slate-300 font-semibold block mb-1">Nama Penuh</label>
+          <input id="regNameInput" type="text" placeholder="Nama anda" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="text-[11px] text-slate-300 font-semibold block mb-1">No. Telefon / Telegram</label>
+          <input id="regContactInput" type="text" placeholder="01x-xxxxxxx atau @username" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500" />
+        </div>
+        <button onclick="handleMemberRegister()" id="registerBtn" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white shadow-lg shadow-emerald-950">
+          Hantar Pendaftaran
+        </button>
+      </div>
+
+      <div id="authStatusMsg" class="text-[11px] text-center min-h-[18px] text-slate-400"></div>
+
+      <!-- Quick Owner Test Button (for testing UI before DB keys are filled) -->
+      <div class="border-t border-slate-800/80 pt-3 flex items-center justify-between text-[10px] text-slate-500">
+        <span>Mod Ujian Awal</span>
+        <button onclick="enterPreviewMode()" class="text-blue-400 font-semibold underline">Buka Pratinjau</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP WRAPPER (HIDDEN UNTIL AUTHORIZED) -->
+  <div id="appShell" class="hidden min-h-screen flex flex-col justify-between pb-24">
+
+    <!-- TOP HEADER -->
+    <header class="sticky top-0 z-30 bg-[#070b14]/95 backdrop-blur-md border-b border-slate-800/70 px-4 pt-3 pb-2.5">
+      <div class="flex items-center justify-between mb-2.5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-rose-900 flex items-center justify-center font-extrabold text-sm tracking-tighter shadow-lg shadow-red-950/50 border border-red-400/30">
+            AFX
+          </div>
+          <div>
+            <div class="text-[10px] text-slate-400 leading-none">intel indicator</div>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span class="font-bold text-sm tracking-wide text-white">ADLI FX</span>
+              <span id="liveDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span id="connectionBadge" class="text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            LIVE FEED
+          </span>
+          <button onclick="openSettingsModal()" class="w-8 h-8 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center text-slate-300 active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAIR SWITCHER -->
+      <div class="grid grid-cols-3 gap-1.5 bg-[#0d1424] p-1 rounded-xl border border-slate-800">
+        <button onclick="selectPair('XAUUSD')" id="pair-XAUUSD" class="pair-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-950/60">
+          XAUUSD
+        </button>
+        <button onclick="selectPair('BTCUSD')" id="pair-BTCUSD" class="pair-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">
+          BTCUSD
+        </button>
+        <button onclick="selectPair('XTIUSD')" id="pair-XTIUSD" class="pair-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">
+          XTIUSD
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 px-3.5 pt-3 space-y-3">
+
+      <!-- TAB 1: CHART -->
+      <section id="tab-chart" class="tab-view space-y-3">
+        <div class="glass-card rounded-2xl p-3 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="activePairTitle" class="text-base font-extrabold tracking-wide">XAUUSD</span>
+              <span id="activeTfBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">M15</span>
+              <span id="activeModeBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">SCALPING</span>
+            </div>
+            <div id="feedSourceLabel" class="text-[11px] text-slate-400 mt-0.5">PAXG/USDT Live Stream</div>
+          </div>
+          <div class="text-right">
+            <div id="livePriceDisplay" class="font-mono-num text-xl font-extrabold text-white">---.--</div>
+            <div id="priceChangeDisplay" class="font-mono-num text-[11px] font-semibold text-emerald-400">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Timeframe Selector -->
+        <div class="flex items-center justify-between gap-1 bg-[#0d1424] p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
+          <button onclick="selectTimeframe('M1')" id="tf-M1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M1</button>
+          <button onclick="selectTimeframe('M5')" id="tf-M5" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M5</button>
+          <button onclick="selectTimeframe('M15')" id="tf-M15" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white">M15</button>
+          <button onclick="selectTimeframe('M30')" id="tf-M30" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">M30</button>
+          <button onclick="selectTimeframe('H1')" id="tf-H1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">H1</button>
+          <button onclick="selectTimeframe('H4')" id="tf-H4" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">H4</button>
+          <button onclick="selectTimeframe('D1')" id="tf-D1" class="tf-btn flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-slate-400">D1</button>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="glass-card rounded-2xl p-2 relative overflow-hidden">
+          <div class="flex items-center justify-between px-2 pb-1.5 text-[10px] text-slate-400 gap-1 flex-wrap">
+            <div class="flex items-center gap-1">
+              <span>SMC ZONE</span>
+              <button onclick="setTradingMode('SCALPING')" id="mode-SCALPING" class="px-2 py-0.5 rounded font-bold bg-blue-600 text-white">
+                SCALPING
+              </button>
+              <button onclick="setTradingMode('INTRADAY')" id="mode-INTRADAY" class="px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300">
+                INTRADAY
+              </button>
+            </div>
+            <button onclick="refreshCurrentChart()" class="text-blue-400 font-semibold active:opacity-70">↻ Refresh</button>
+          </div>
+          <div id="chartContainer" class="w-full h-[340px] rounded-xl overflow-hidden"></div>
+          <div id="zoneOverlayList" class="mt-2 grid grid-cols-2 gap-1.5 text-[11px]"></div>
+        </div>
+
+        <p class="text-[10px] text-slate-500 text-center px-2 leading-relaxed">
+          ADLI FX intel indicator • SMC Order Block & Liquidity Sweep scanner.
+        </p>
+      </section>
+
+      <!-- TAB 2: STATS -->
+      <section id="tab-stats" class="tab-view hidden space-y-3">
+        <div class="glass-card rounded-2xl p-4">
+          <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Performance Analytics</h2>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-[#0a101d] p-3 rounded-xl border border-slate-800">
+              <div class="text-[10px] text-slate-400">WIN RATE</div>
+              <div class="font-mono-num text-lg font-extrabold text-emerald-400 mt-1">78.4%</div>
+            </div>
+            <div class="bg-[#0a101d] p-3 rounded-xl border border-slate-800">
+              <div class="text-[10px] text-slate-400">NET PIPS</div>
+              <div class="font-mono-num text-lg font-extrabold text-blue-400 mt-1">+1,420</div>
+            </div>
+            <div class="bg-[#0a101d] p-3 rounded-xl border border-slate-800">
+              <div class="text-[10px] text-slate-400">RISK/REWARD</div>
+              <div class="font-mono-num text-lg font-extrabold text-amber-400 mt-1">1:3.2</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SIGNAL -->
+      <section id="tab-signal" class="tab-view hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-extrabold tracking-wide">SMC ZONE SIGNALS</h2>
+          <span id="signalModeLabel" class="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold border border-red-500/30">SCALPING</span>
+        </div>
+        <div id="signalCardsContainer" class="space-y-2.5"></div>
+      </section>
+
+      <!-- TAB 4: PLANNER -->
+      <section id="tab-planner" class="tab-view hidden space-y-3">
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <h2 class="text-sm font-extrabold tracking-wide">LOT & RISK CALCULATOR</h2>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Account Balance (USD)</label>
+            <input id="calcBalance" type="number" value="1000" oninput="calculateLot()" class="w-full bg-[#0a101d] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Risk (%)</label>
+              <input id="calcRisk" type="number" value="2" step="0.5" oninput="calculateLot()" class="w-full bg-[#0a101d] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Stop Loss (Pips)</label>
+              <input id="calcSL" type="number" value="30" oninput="calculateLot()" class="w-full bg-[#0a101d] border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-sm text-white focus:outline-none focus:border-blue-500" />
+            </div>
+          </div>
+          <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div>
+              <div class="text-[10px] text-blue-300 uppercase">Recommended Lot Size</div>
+              <div id="calcRiskUsd" class="text-[11px] text-slate-400">Risk Amount: $20.00</div>
+            </div>
+            <div id="calcLotResult" class="font-mono-num text-2xl font-extrabold text-blue-400">0.07</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: NEWS -->
+      <section id="tab-news" class="tab-view hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase tracking-wider">Economic Calendar • Times in MYT</div>
+            <h2 class="text-lg font-extrabold">MARKET NEWS</h2>
+          </div>
+          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30">USD IMPACT</span>
+        </div>
+        <div class="rounded-2xl p-4 bg-gradient-to-br from-blue-600 to-indigo-900 shadow-lg shadow-blue-950/60 border border-blue-400/30">
+          <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-blue-100">
+            <span>• NEXT HIGH IMPACT</span>
+            <span class="bg-red-500/30 text-white px-2 py-0.5 rounded">HIGH IMPACT</span>
+          </div>
+          <div class="text-lg font-extrabold mt-2 leading-snug">US Core PCE & FOMC Rate Outlook</div>
+          <div class="flex items-center justify-between mt-3">
+            <span class="font-mono-num text-xl font-extrabold">21:30 MYT</span>
+            <span class="text-xs font-bold bg-white/15 px-3 py-1 rounded-full">Gold Volatility Alert</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="fixed bottom-0 inset-x-0 z-40 bg-[#080d18]/95 backdrop-blur-lg border-t border-slate-800/90 px-2 py-1.5">
+      <div class="max-w-md mx-auto grid grid-cols-5 items-center text-center relative">
+        <button onclick="switchTab('chart')" id="nav-chart" class="nav-btn flex flex-col items-center justify-center py-1 text-blue-400">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          <span class="text-[9px] font-bold tracking-wider">CHART</span>
+        </button>
+
+        <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <span class="text-[9px] font-bold tracking-wider">STATS</span>
+        </button>
+
+        <div class="flex flex-col items-center justify-center -mt-6">
+          <button onclick="switchTab('signal')" id="nav-signal" class="red-orb w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-xs tracking-tighter text-white border-2 border-red-300/40 active:scale-95 transition-transform">
+            AFX
+          </button>
+          <span class="text-[9px] font-bold tracking-wider text-slate-300 mt-1">SIGNAL</span>
+        </div>
+
+        <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <span class="text-[9px] font-bold tracking-wider">PLANNER</span>
+        </button>
+
+        <button onclick="switchTab('news')" id="nav-news" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span class="text-[9px] font-bold tracking-wider">NEWS</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card w-full max-w-sm rounded-2xl p-5 space-y-3.5 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between">
-        <h3 class="font-bold text-base">ADLI FX • Live Feed API</h3>
+        <h3 class="font-bold text-base">ADLI FX • Feed & Alerts</h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
       </div>
-      <p class="text-xs text-slate-400 leading-relaxed">
-        API Key Twelve Data anda sudah dipasang secara automatik untuk XAUUSD & XTIUSD. BTCUSD menggunakan suapan langsung Binance.
-      </p>
       <div>
         <label class="text-[11px] text-slate-300 font-semibold block mb-1">Twelve Data API Key</label>
         <input id="apiKeyInput" type="text" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-num text-emerald-400 focus:outline-none focus:border-blue-500" />
       </div>
+      <div class="border-t border-slate-800 pt-3 space-y-2">
+        <div class="text-[11px] font-bold text-blue-400 uppercase">Optional Telegram Alert</div>
+        <input id="tgTokenInput" type="text" placeholder="Telegram Bot Token" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-num text-white focus:outline-none focus:border-blue-500" />
+        <input id="tgChatInput" type="text" placeholder="Telegram Chat ID" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-num text-white focus:outline-none focus:border-blue-500" />
+      </div>
       <button onclick="saveApiKey()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white shadow-lg shadow-blue-950">
-        Simpan & Aktifkan Live Data
+        Simpan & Aktifkan
+      </button>
+      <button onclick="logoutMember()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xs text-red-400">
+        Log Keluar Akaun Ahli
       </button>
     </div>
   </div>
 
   <script>
+    // === SUPABASE DATABASE CONFIG (ISI URL & ANON KEY ANDA) ===
+    const SUPABASE_URL = ""; // contoh: "https://xxxx.supabase.co"
+    const SUPABASE_ANON_KEY = ""; // contoh: "eyJhbGciOi..."
+
     const DEFAULT_API_KEY = "86e67a606d104c72be5fe7308ee22a9f";
     let apiKey = localStorage.getItem("adlifx_td_key") || DEFAULT_API_KEY;
+    let tgToken = localStorage.getItem("adlifx_tg_token") || "";
+    let tgChatId = localStorage.getItem("adlifx_tg_chat") || "";
+
     let currentPair = "XAUUSD";
     let currentTf = "M15";
+    let tradingMode = "SCALPING";
     let chart, candleSeries, priceLines = [];
     let liveInterval = null;
-    let btcSocket = null;
+    let streamSocket = null;
     let lastCandles = [];
+    let alertedZones = new Set();
+    let audioCtx = null;
+    let terminalInitialized = false;
 
-    const tfMapTwelve = {
-      M1: "1min", M5: "5min", M15: "15min", M30: "30min", H1: "1h", H4: "4h", D1: "1day"
-    };
-    const tfMapBinance = {
-      M1: "1m", M5: "5m", M15: "15m", M30: "30m", H1: "1h", H4: "4h", D1: "1d"
-    };
-    const symbolMapTwelve = {
-      XAUUSD: "XAU/USD",
-      XTIUSD: "WTI/USD"
-    };
+    function switchAuthMode(mode) {
+      const isLogin = mode === "login";
+      document.getElementById("loginForm").classList.toggle("hidden", !isLogin);
+      document.getElementById("registerForm").classList.toggle("hidden", isLogin);
+      document.getElementById("authTabLogin").className = isLogin
+        ? "py-1.5 rounded-lg bg-blue-600 text-white"
+        : "py-1.5 rounded-lg text-slate-400";
+      document.getElementById("authTabRegister").className = !isLogin
+        ? "py-1.5 rounded-lg bg-blue-600 text-white"
+        : "py-1.5 rounded-lg text-slate-400";
+      document.getElementById("authStatusMsg").innerText = "";
+    }
+
+    function unlockTerminal(memberLabel) {
+      localStorage.setItem("adlifx_member_session", memberLabel || "verified");
+      document.getElementById("authGate").classList.add("hidden");
+      document.getElementById("appShell").classList.remove("hidden");
+      if (!terminalInitialized) {
+        terminalInitialized = true;
+        initChart();
+        loadMarketData();
+        calculateLot();
+      }
+    }
+
+    function logoutMember() {
+      localStorage.removeItem("adlifx_member_session");
+      closeSettingsModal();
+      document.getElementById("appShell").classList.add("hidden");
+      document.getElementById("authGate").classList.remove("hidden");
+    }
+
+    function enterPreviewMode() {
+      unlockTerminal("preview-mode");
+    }
+
+    async function handleMemberLogin() {
+      const code = document.getElementById("loginCodeInput").value.trim().toUpperCase();
+      const statusEl = document.getElementById("authStatusMsg");
+      if (!code) {
+        statusEl.innerText = "Sila masukkan Kod Akses Ahli.";
+        return;
+      }
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        statusEl.innerText = "Database belum disambung (isi SUPABASE_URL & KEY atau tekan Buka Pratinjau).";
+        return;
+      }
+      statusEl.innerText = "Menyemak status dalam database...";
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/members?access_code=eq.${encodeURIComponent(code)}&select=id,name,status,expired_at`,
+          {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        const rows = await res.json();
+        if (!Array.isArray(rows) || rows.length === 0) {
+          statusEl.innerText = "Kod akses tidak dijumpai. Sila daftar dengan admin dahulu.";
+          return;
+        }
+        const member = rows[0];
+        if (member.status !== "active") {
+          statusEl.innerText = `Akaun berstatus "${member.status}". Hubungi admin untuk aktifkan.`;
+          return;
+        }
+        if (member.expired_at && new Date(member.expired_at) < new Date()) {
+          statusEl.innerText = "Akses telah tamat tempoh. Sila perbaharui dengan admin.";
+          return;
+        }
+        unlockTerminal(member.name || code);
+      } catch (e) {
+        statusEl.innerText = "Gagal berhubung ke database.";
+      }
+    }
+
+    async function handleMemberRegister() {
+      const name = document.getElementById("regNameInput").value.trim();
+      const contact = document.getElementById("regContactInput").value.trim();
+      const statusEl = document.getElementById("authStatusMsg");
+
+      if (!name || !contact) {
+        statusEl.innerText = "Sila isi Nama Penuh dan No. Telefon / Telegram.";
+        return;
+      }
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        statusEl.innerText = "Database belum disambung. Isi SUPABASE_URL & KEY dahulu.";
+        return;
+      }
+
+      const generatedCode = "AFX-" + Math.floor(1000 + Math.random() * 9000);
+      statusEl.innerText = "Menghantar pendaftaran ke database...";
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/members`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({
+            name,
+            contact,
+            access_code: generatedCode,
+            status: "pending"
+          })
+        });
+
+        if (!res.ok) {
+          statusEl.innerText = "Pendaftaran gagal disimpan. Semak polisi jadual members.";
+          return;
+        }
+
+        statusEl.innerHTML = `Berdaftar! Kod anda: <b class="text-emerald-400">${generatedCode}</b><br/>Status: <b>pending</b> — hubungi admin untuk aktifkan.`;
+      } catch (e) {
+        statusEl.innerText = "Ralat rangkaian semasa mendaftar.";
+      }
+    }
+
+    function playAlertBeep() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } catch (e) {}
+    }
+
+    async function requestNotifPermission() {
+      if ("Notification" in window && Notification.permission === "default") {
+        await Notification.requestPermission();
+      }
+    }
+
+    async function sendTelegramAlert(text) {
+      if (!tgToken || !tgChatId) return;
+      try {
+        await fetch(`https://api.telegram.org/bot${encodeURIComponent(tgToken)}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: tgChatId, text })
+        });
+      } catch (e) {}
+    }
+
+    function triggerZoneNotification(title, body) {
+      playAlertBeep();
+      if ("vibrate" in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body, tag: title });
+      }
+      sendTelegramAlert(`${title}\n${body}`);
+    }
 
     function initChart() {
       const container = document.getElementById("chartContainer");
@@ -370,128 +555,235 @@
       priceLines = [];
     }
 
-    function detectAndDrawZones(candles) {
-      clearZones();
-      if (!candles || candles.length < 15) return;
+    function detectSmcSetups(candles) {
+      if (!candles || candles.length < 25) return { sells: [], buys: [] };
 
       const currentClose = candles[candles.length - 1].close;
-      const pipMult = currentPair === "XAUUSD" ? 10 : (currentPair === "BTCUSD" ? 1 : 100);
+      const lookback = tradingMode === "SCALPING" ? 2 : 4;
+      const maxDistPct = tradingMode === "SCALPING" ? 0.012 : 0.035;
 
-      let swingHighs = [];
-      let swingLows = [];
-
-      for (let i = 3; i < candles.length - 3; i++) {
-        const h = candles[i].high;
-        const l = candles[i].low;
-        if (h > candles[i-1].high && h > candles[i-2].high && h > candles[i+1].high && h > candles[i+2].high) {
-          swingHighs.push(h);
+      let swings = [];
+      for (let i = lookback; i < candles.length - lookback; i++) {
+        let isHigh = true;
+        let isLow = true;
+        for (let k = 1; k <= lookback; k++) {
+          if (candles[i].high <= candles[i - k].high || candles[i].high <= candles[i + k].high) {
+            isHigh = false;
+          }
+          if (candles[i].low >= candles[i - k].low || candles[i].low >= candles[i + k].low) {
+            isLow = false;
+          }
         }
-        if (l < candles[i-1].low && l < candles[i-2].low && l < candles[i+1].low && l < candles[i+2].low) {
-          swingLows.push(l);
+        if (isHigh) swings.push({ type: "HIGH", index: i, price: candles[i].high });
+        if (isLow) swings.push({ type: "LOW", index: i, price: candles[i].low });
+      }
+
+      let sells = [];
+      let buys = [];
+
+      for (let i = 1; i < candles.length; i++) {
+        const c = candles[i];
+        const prevSwings = swings.filter(s => s.index < i);
+        const lastHigh = [...prevSwings].reverse().find(s => s.type === "HIGH");
+        const lastLow = [...prevSwings].reverse().find(s => s.type === "LOW");
+
+        if (lastHigh && c.high > lastHigh.price) {
+          const swept = c.close < lastHigh.price;
+          for (let j = i - 1; j >= Math.max(0, i - 8); j--) {
+            if (candles[j].close > candles[j].open) {
+              const zonePrice = candles[j].high;
+              if (zonePrice > currentClose && (zonePrice - currentClose) / currentClose <= maxDistPct) {
+                sells.push({
+                  price: zonePrice,
+                  tag: swept ? "SWEEP+OB SELL" : "BOS OB SELL",
+                  reason: swept ? "Liquidity sweep atas & rejection" : "Break of structure ke atas lalu supply OB"
+                });
+              }
+              break;
+            }
+          }
+        }
+
+        if (lastLow && c.low < lastLow.price) {
+          const swept = c.close > lastLow.price;
+          for (let j = i - 1; j >= Math.max(0, i - 8); j--) {
+            if (candles[j].close < candles[j].open) {
+              const zonePrice = candles[j].low;
+              if (zonePrice < currentClose && (currentClose - zonePrice) / currentClose <= maxDistPct) {
+                buys.push({
+                  price: zonePrice,
+                  tag: swept ? "SWEEP+OB BUY" : "BOS OB BUY",
+                  reason: swept ? "Liquidity sweep bawah & rejection" : "Break of structure ke bawah lalu demand OB"
+                });
+              }
+              break;
+            }
+          }
         }
       }
 
-      const topResistances = [...new Set(swingHighs.filter(p => p > currentClose))].sort((a, b) => a - b).slice(0, 2);
-      const topSupports = [...new Set(swingLows.filter(p => p < currentClose))].sort((a, b) => b - a).slice(0, 2);
+      const uniqueSells = sells
+        .sort((a, b) => a.price - b.price)
+        .filter((item, idx, arr) => idx === 0 || Math.abs(item.price - arr[idx - 1].price) / item.price > 0.001)
+        .slice(0, 2);
+
+      const uniqueBuys = buys
+        .sort((a, b) => b.price - a.price)
+        .filter((item, idx, arr) => idx === 0 || Math.abs(item.price - arr[idx - 1].price) / item.price > 0.001)
+        .slice(0, 2);
+
+      return { sells: uniqueSells, buys: uniqueBuys };
+    }
+
+    function detectAndDrawZones(candles) {
+      clearZones();
+      if (!candles || candles.length < 25) return;
+
+      const currentClose = candles[candles.length - 1].close;
+      const pipMult = currentPair === "XAUUSD" ? 10 : (currentPair === "BTCUSD" ? 1 : 100);
+      const { sells, buys } = detectSmcSetups(candles);
 
       const zoneSummaryEl = document.getElementById("zoneOverlayList");
       const signalContainer = document.getElementById("signalCardsContainer");
       zoneSummaryEl.innerHTML = "";
       signalContainer.innerHTML = "";
 
-      topResistances.forEach((price, idx) => {
-        const pips = Math.round(Math.abs(price - currentClose) * pipMult);
-        const label = idx === 0 ? `SELL ${pips}p` : `SELL FLIP ${pips}p`;
+      sells.forEach((z) => {
+        const pips = Math.max(1, Math.round(Math.abs(z.price - currentClose) * pipMult));
+        const title = `${z.tag} ${pips}p`;
         const line = candleSeries.createPriceLine({
-          price: price,
+          price: z.price,
           color: "#ef4444",
           lineWidth: 2,
           lineStyle: LightweightCharts.LineStyle.Solid,
           axisLabelVisible: true,
-          title: label,
+          title,
         });
         priceLines.push(line);
 
         zoneSummaryEl.innerHTML += `
           <div class="bg-red-500/15 border border-red-500/30 rounded-lg px-2.5 py-1.5 flex justify-between items-center">
-            <span class="font-bold text-red-400">${label}</span>
-            <span class="font-mono-num text-slate-200">${price.toFixed(2)}</span>
+            <span class="font-bold text-red-400">${title}</span>
+            <span class="font-mono-num text-slate-200">${z.price.toFixed(2)}</span>
           </div>`;
 
         signalContainer.innerHTML += `
           <div class="glass-card rounded-2xl p-3.5 border-l-4 border-l-red-500 flex justify-between items-center">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-red-400">${label}</span>
-                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf}</span>
+                <span class="text-xs font-extrabold text-red-400">${z.tag}</span>
+                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf} • ${tradingMode}</span>
               </div>
-              <div class="text-xs text-slate-400 mt-1">Supply Flip Zone • Target +${Math.max(40, Math.round(pips*0.8))} pips</div>
+              <div class="text-xs text-slate-400 mt-1">${z.reason} • Target +${Math.max(30, Math.round(pips * 0.8))} pips</div>
             </div>
             <div class="text-right font-mono-num">
-              <div class="text-sm font-bold text-white">${price.toFixed(2)}</div>
-              <div class="text-[10px] text-red-400">LIMIT SELL</div>
+              <div class="text-sm font-bold text-white">${z.price.toFixed(2)}</div>
+              <div class="text-[10px] text-red-400">SMC SELL</div>
             </div>
           </div>`;
       });
 
-      topSupports.forEach((price, idx) => {
-        const pips = Math.round(Math.abs(currentClose - price) * pipMult);
-        const label = idx === 0 ? `BUY ${pips}p` : `BUY FLIP ${pips}p`;
+      buys.forEach((z) => {
+        const pips = Math.max(1, Math.round(Math.abs(currentClose - z.price) * pipMult));
+        const title = `${z.tag} ${pips}p`;
         const line = candleSeries.createPriceLine({
-          price: price,
+          price: z.price,
           color: "#10b981",
           lineWidth: 2,
           lineStyle: LightweightCharts.LineStyle.Solid,
           axisLabelVisible: true,
-          title: label,
+          title,
         });
         priceLines.push(line);
 
         zoneSummaryEl.innerHTML += `
           <div class="bg-emerald-500/15 border border-emerald-500/30 rounded-lg px-2.5 py-1.5 flex justify-between items-center">
-            <span class="font-bold text-emerald-400">${label}</span>
-            <span class="font-mono-num text-slate-200">${price.toFixed(2)}</span>
+            <span class="font-bold text-emerald-400">${title}</span>
+            <span class="font-mono-num text-slate-200">${z.price.toFixed(2)}</span>
           </div>`;
 
         signalContainer.innerHTML += `
           <div class="glass-card rounded-2xl p-3.5 border-l-4 border-l-emerald-500 flex justify-between items-center">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-emerald-400">${label}</span>
-                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf}</span>
+                <span class="text-xs font-extrabold text-emerald-400">${z.tag}</span>
+                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf} • ${tradingMode}</span>
               </div>
-              <div class="text-xs text-slate-400 mt-1">Demand Flip Zone • Target +${Math.max(40, Math.round(pips*0.8))} pips</div>
+              <div class="text-xs text-slate-400 mt-1">${z.reason} • Target +${Math.max(30, Math.round(pips * 0.8))} pips</div>
             </div>
             <div class="text-right font-mono-num">
-              <div class="text-sm font-bold text-white">${price.toFixed(2)}</div>
-              <div class="text-[10px] text-emerald-400">LIMIT BUY</div>
+              <div class="text-sm font-bold text-white">${z.price.toFixed(2)}</div>
+              <div class="text-[10px] text-emerald-400">SMC BUY</div>
             </div>
           </div>`;
+      });
+
+      if (sells.length === 0 && buys.length === 0) {
+        signalContainer.innerHTML = `
+          <div class="glass-card rounded-2xl p-4 text-xs text-slate-400 text-center">
+            Tiada setup SMC aktif dalam julat ${tradingMode} untuk ${currentPair} (${currentTf}) buat masa ini.
+          </div>`;
+      }
+    }
+
+    function checkZoneHits(currentPrice) {
+      if (!lastCandles || lastCandles.length < 25) return;
+      const { sells, buys } = detectSmcSetups(lastCandles);
+      const tolerance = currentPair === "BTCUSD" ? 15 : (currentPair === "XAUUSD" ? 0.5 : 0.05);
+
+      sells.forEach((z, idx) => {
+        const key = `${currentPair}-${currentTf}-${tradingMode}-SELL-${idx}-${z.price.toFixed(2)}`;
+        if (Math.abs(currentPrice - z.price) <= tolerance && !alertedZones.has(key)) {
+          alertedZones.add(key);
+          triggerZoneNotification(
+            `ADLI FX (${tradingMode}): ${currentPair} SMC SELL`,
+            `Harga ${currentPrice.toFixed(2)} sampai zon ${z.tag} @ ${z.price.toFixed(2)} (${currentTf})`
+          );
+        }
+      });
+
+      buys.forEach((z, idx) => {
+        const key = `${currentPair}-${currentTf}-${tradingMode}-BUY-${idx}-${z.price.toFixed(2)}`;
+        if (Math.abs(currentPrice - z.price) <= tolerance && !alertedZones.has(key)) {
+          alertedZones.add(key);
+          triggerZoneNotification(
+            `ADLI FX (${tradingMode}): ${currentPair} SMC BUY`,
+            `Harga ${currentPrice.toFixed(2)} sampai zon ${z.tag} @ ${z.price.toFixed(2)} (${currentTf})`
+          );
+        }
       });
     }
 
     async function loadMarketData() {
       if (liveInterval) clearInterval(liveInterval);
-      if (btcSocket) { btcSocket.close(); btcSocket = null; }
+      if (streamSocket) { streamSocket.close(); streamSocket = null; }
+      requestNotifPermission();
 
       document.getElementById("activePairTitle").innerText = currentPair;
       document.getElementById("activeTfBadge").innerText = currentTf;
+      document.getElementById("activeModeBadge").innerText = tradingMode;
+      document.getElementById("signalModeLabel").innerText = tradingMode;
 
       if (currentPair === "BTCUSD") {
         document.getElementById("feedSourceLabel").innerText = "Binance Real-Time WebSocket";
-        await fetchBinanceHistory();
-        startBinanceSocket();
+        await fetchBinanceSymbol("BTCUSDT");
+        startBinanceSocket("btcusdt");
+      } else if (currentPair === "XAUUSD") {
+        document.getElementById("feedSourceLabel").innerText = "PAXG/USDT Live Stream";
+        await fetchBinanceSymbol("PAXGUSDT");
+        startBinanceSocket("paxgusdt");
       } else {
         document.getElementById("feedSourceLabel").innerText = "Twelve Data Live API";
         await fetchTwelveData();
-        liveInterval = setInterval(fetchTwelveData, 20000);
+        liveInterval = setInterval(fetchTwelveData, 5000);
       }
     }
 
-    async function fetchBinanceHistory() {
+    async function fetchBinanceSymbol(symbol) {
       try {
+        const tfMapBinance = { M1: "1m", M5: "5m", M15: "15m", M30: "30m", H1: "1h", H4: "4h", D1: "1d" };
         const interval = tfMapBinance[currentTf];
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=80`);
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=90`);
         const data = await res.json();
         lastCandles = data.map(d => ({
           time: Math.floor(d[0] / 1000),
@@ -503,15 +795,19 @@
         candleSeries.setData(lastCandles);
         detectAndDrawZones(lastCandles);
         updatePriceHeader(lastCandles);
+        checkZoneHits(lastCandles[lastCandles.length - 1].close);
+        document.getElementById("connectionBadge").innerText = "LIVE FEED";
+        document.getElementById("connectionBadge").className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
       } catch (e) {
         console.error(e);
       }
     }
 
-    function startBinanceSocket() {
+    function startBinanceSocket(streamSymbol) {
+      const tfMapBinance = { M1: "1m", M5: "5m", M15: "15m", M30: "30m", H1: "1h", H4: "4h", D1: "1d" };
       const interval = tfMapBinance[currentTf];
-      btcSocket = new WebSocket(`wss://stream.binance.com:9443/ws/btcusdt@kline_${interval}`);
-      btcSocket.onmessage = (event) => {
+      streamSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${streamSymbol}@kline_${interval}`);
+      streamSocket.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         const k = msg.k;
         const bar = {
@@ -525,15 +821,18 @@
         if (lastCandles.length > 0) {
           lastCandles[lastCandles.length - 1] = bar;
           updatePriceHeader(lastCandles);
+          checkZoneHits(bar.close);
         }
       };
     }
 
     async function fetchTwelveData() {
       try {
+        const tfMapTwelve = { M1: "1min", M5: "5min", M15: "15min", M30: "30min", H1: "1h", H4: "4h", D1: "1day" };
+        const symbolMapTwelve = { XAUUSD: "XAU/USD", XTIUSD: "WTI/USD" };
         const sym = symbolMapTwelve[currentPair];
         const interval = tfMapTwelve[currentTf];
-        const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${interval}&outputsize=80&apikey=${apiKey}`;
+        const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${interval}&outputsize=90&apikey=${apiKey}`;
         const res = await fetch(url);
         const json = await res.json();
 
@@ -548,6 +847,7 @@
           candleSeries.setData(lastCandles);
           detectAndDrawZones(lastCandles);
           updatePriceHeader(lastCandles);
+          checkZoneHits(lastCandles[lastCandles.length - 1].close);
           document.getElementById("connectionBadge").innerText = "LIVE FEED";
           document.getElementById("connectionBadge").className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
         } else {
@@ -571,6 +871,25 @@
       const chgEl = document.getElementById("priceChangeDisplay");
       chgEl.innerText = `${isUp ? "+" : ""}${diff.toFixed(2)} (${isUp ? "+" : ""}${pct}%)`;
       chgEl.className = `font-mono-num text-[11px] font-semibold ${isUp ? "text-emerald-400" : "text-red-400"}`;
+    }
+
+    function setTradingMode(mode) {
+      tradingMode = mode;
+      document.getElementById("activeModeBadge").innerText = mode;
+      document.getElementById("signalModeLabel").innerText = mode;
+      document.getElementById("mode-SCALPING").className =
+        mode === "SCALPING"
+          ? "px-2 py-0.5 rounded font-bold bg-blue-600 text-white"
+          : "px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300";
+      document.getElementById("mode-INTRADAY").className =
+        mode === "INTRADAY"
+          ? "px-2 py-0.5 rounded font-bold bg-blue-600 text-white"
+          : "px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300";
+
+      if (lastCandles && lastCandles.length > 0) {
+        detectAndDrawZones(lastCandles);
+        checkZoneHits(lastCandles[lastCandles.length - 1].close);
+      }
     }
 
     function selectPair(pair) {
@@ -622,6 +941,8 @@
 
     function openSettingsModal() {
       document.getElementById("apiKeyInput").value = apiKey;
+      document.getElementById("tgTokenInput").value = tgToken;
+      document.getElementById("tgChatInput").value = tgChatId;
       document.getElementById("settingsModal").classList.remove("hidden");
       document.getElementById("settingsModal").classList.add("flex");
     }
@@ -632,13 +953,21 @@
     }
 
     function saveApiKey() {
-      const val = document.getElementById("apiKeyInput").value.trim();
-      if (val) {
-        apiKey = val;
-        localStorage.setItem("adlifx_td_key", val);
-        closeSettingsModal();
-        loadMarketData();
+      const keyVal = document.getElementById("apiKeyInput").value.trim();
+      const tokenVal = document.getElementById("tgTokenInput").value.trim();
+      const chatVal = document.getElementById("tgChatInput").value.trim();
+
+      if (keyVal) {
+        apiKey = keyVal;
+        localStorage.setItem("adlifx_td_key", keyVal);
       }
+      tgToken = tokenVal;
+      tgChatId = chatVal;
+      localStorage.setItem("adlifx_tg_token", tokenVal);
+      localStorage.setItem("adlifx_tg_chat", chatVal);
+
+      closeSettingsModal();
+      loadMarketData();
     }
 
     if ("serviceWorker" in navigator) {
@@ -648,9 +977,10 @@
     }
 
     window.onload = () => {
-      initChart();
-      loadMarketData();
-      calculateLot();
+      const savedSession = localStorage.getItem("adlifx_member_session");
+      if (savedSession) {
+        unlockTerminal(savedSession);
+      }
     };
   </script>
 </body>
