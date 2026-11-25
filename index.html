@@ -37,7 +37,7 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between select-none">
 
-  <!-- MEMBER AUTH GATE (DATABASE ACCESS CONTROL) -->
+  <!-- MEMBER & ADMIN AUTH GATE (DATABASE ACCESS CONTROL) -->
   <div id="authGate" class="fixed inset-0 z-50 bg-[#070b14] flex items-center justify-center p-4 overflow-y-auto">
     <div class="glass-card w-full max-w-sm rounded-2xl p-5 space-y-4">
       <div class="text-center space-y-1">
@@ -45,23 +45,36 @@
           AFX
         </div>
         <h1 class="text-base font-extrabold tracking-wide text-white pt-1">ADLI FX intel indicator</h1>
-        <p class="text-[11px] text-slate-400">Akses terhad untuk ahli berdaftar sahaja</p>
+        <p class="text-[11px] text-slate-400">Akses Admin & Ahli Berdaftar Sahaja</p>
       </div>
 
-      <!-- Mode Switch: Login vs Register -->
+      <!-- Mode Switch: Login (Admin/Member) vs Register -->
       <div class="grid grid-cols-2 gap-1 bg-[#0a101d] p-1 rounded-xl border border-slate-800 text-xs font-bold">
         <button onclick="switchAuthMode('login')" id="authTabLogin" class="py-1.5 rounded-lg bg-blue-600 text-white">Log Masuk</button>
         <button onclick="switchAuthMode('register')" id="authTabRegister" class="py-1.5 rounded-lg text-slate-400">Daftar Ahli</button>
       </div>
 
-      <!-- LOGIN FORM -->
+      <!-- LOGIN FORM (ADMIN & MEMBER) -->
       <div id="loginForm" class="space-y-3">
         <div>
-          <label class="text-[11px] text-slate-300 font-semibold block mb-1">Kod Akses Ahli</label>
+          <label class="text-[11px] text-slate-300 font-semibold block mb-1">Jenis Akaun</label>
+          <div class="grid grid-cols-2 gap-1.5">
+            <button type="button" onclick="selectLoginRole('member')" id="roleBtnMember" class="py-2 rounded-xl text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-500/40">
+              Member
+            </button>
+            <button type="button" onclick="selectLoginRole('admin')" id="roleBtnAdmin" class="py-2 rounded-xl text-xs font-bold bg-[#070b14] text-slate-400 border border-slate-700">
+              Admin
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label id="loginCodeLabel" class="text-[11px] text-slate-300 font-semibold block mb-1">Kod Akses Ahli</label>
           <input id="loginCodeInput" type="text" placeholder="Contoh: AFX-8899" class="w-full bg-[#070b14] border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-mono-num text-white uppercase focus:outline-none focus:border-blue-500" />
         </div>
+
         <button onclick="handleMemberLogin()" id="loginBtn" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white shadow-lg shadow-blue-950">
-          Masuk Ke Terminal
+          Masuk Ke Terminal (Member)
         </button>
       </div>
 
@@ -80,7 +93,7 @@
         </button>
       </div>
 
-      <div id="authStatusMsg" class="text-[11px] text-center min-h-[18px] text-slate-400"></div>
+      <div id="authStatusMsg" class="text-[11px] text-center min-h-[18px] text-slate-400 leading-relaxed"></div>
 
       <!-- Quick Owner Test Button -->
       <div class="border-t border-slate-800/80 pt-3 flex items-center justify-between text-[10px] text-slate-500">
@@ -105,13 +118,14 @@
             <div class="flex items-center gap-1.5 mt-0.5">
               <span class="font-bold text-sm tracking-wide text-white">ADLI FX</span>
               <span id="liveDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="sessionRoleBadge" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-slate-800 text-blue-300 border border-slate-700">MEMBER</span>
             </div>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
           <span id="connectionBadge" class="text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-            LIVE FEED
+            REALTIME FEED
           </span>
           <button onclick="openSettingsModal()" class="w-8 h-8 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center text-slate-300 active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -147,7 +161,7 @@
               <span id="activeTfBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">M15</span>
               <span id="activeModeBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">SCALPING</span>
             </div>
-            <div id="feedSourceLabel" class="text-[11px] text-slate-400 mt-0.5">PAXG/USDT Live Stream</div>
+            <div id="feedSourceLabel" class="text-[11px] text-slate-400 mt-0.5">XAUUSD Realtime Engine</div>
           </div>
           <div class="text-right">
             <div id="livePriceDisplay" class="font-mono-num text-xl font-extrabold text-white">---.--</div>
@@ -170,7 +184,7 @@
         <div class="glass-card rounded-2xl p-2 relative overflow-hidden">
           <div class="flex items-center justify-between px-2 pb-1.5 text-[10px] text-slate-400 gap-1 flex-wrap">
             <div class="flex items-center gap-1">
-              <span>SMC ZONE</span>
+              <span>AREA</span>
               <button onclick="setTradingMode('SCALPING')" id="mode-SCALPING" class="px-2 py-0.5 rounded font-bold bg-blue-600 text-white">
                 SCALPING
               </button>
@@ -185,7 +199,7 @@
         </div>
 
         <p class="text-[10px] text-slate-500 text-center px-2 leading-relaxed">
-          ADLI FX intel indicator • SMC Order Block & Liquidity Sweep scanner.
+          ADLI FX intel indicator • Sell Area & Buy Area Scanner.
         </p>
       </section>
 
@@ -213,7 +227,7 @@
       <!-- TAB 3: SIGNAL -->
       <section id="tab-signal" class="tab-view hidden space-y-3">
         <div class="flex items-center justify-between">
-          <h2 class="text-sm font-extrabold tracking-wide">SMC ZONE SIGNALS</h2>
+          <h2 class="text-sm font-extrabold tracking-wide">SELL AREA & BUY AREA</h2>
           <span id="signalModeLabel" class="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold border border-red-500/30">SCALPING</span>
         </div>
         <div id="signalCardsContainer" class="space-y-2.5"></div>
@@ -324,7 +338,7 @@
         Simpan & Aktifkan
       </button>
       <button onclick="logoutMember()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xs text-red-400">
-        Log Keluar Akaun Ahli
+        Log Keluar Akaun
       </button>
     </div>
   </div>
@@ -339,6 +353,7 @@
     let tgToken = localStorage.getItem("adlifx_tg_token") || "";
     let tgChatId = localStorage.getItem("adlifx_tg_chat") || "";
 
+    let selectedLoginRole = "member";
     let currentPair = "XAUUSD";
     let currentTf = "M15";
     let tradingMode = "SCALPING";
@@ -349,6 +364,25 @@
     let alertedZones = new Set();
     let audioCtx = null;
     let terminalInitialized = false;
+    let loadSeq = 0;
+
+    function selectLoginRole(role) {
+      selectedLoginRole = role === "admin" ? "admin" : "member";
+      const isAdmin = selectedLoginRole === "admin";
+
+      document.getElementById("roleBtnMember").className = !isAdmin
+        ? "py-2 rounded-xl text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-500/40"
+        : "py-2 rounded-xl text-xs font-bold bg-[#070b14] text-slate-400 border border-slate-700";
+
+      document.getElementById("roleBtnAdmin").className = isAdmin
+        ? "py-2 rounded-xl text-xs font-bold bg-red-600/20 text-red-300 border border-red-500/40"
+        : "py-2 rounded-xl text-xs font-bold bg-[#070b14] text-slate-400 border border-slate-700";
+
+      document.getElementById("loginCodeLabel").innerText = isAdmin ? "Kod Akses Admin" : "Kod Akses Ahli";
+      document.getElementById("loginCodeInput").placeholder = isAdmin ? "Contoh: AFX-ADMIN" : "Contoh: AFX-8899";
+      document.getElementById("loginBtn").innerText = isAdmin ? "Masuk Ke Terminal (Admin)" : "Masuk Ke Terminal (Member)";
+      document.getElementById("authStatusMsg").innerText = "";
+    }
 
     function switchAuthMode(mode) {
       const isLogin = mode === "login";
@@ -363,8 +397,19 @@
       document.getElementById("authStatusMsg").innerText = "";
     }
 
-    function unlockTerminal(memberLabel) {
-      localStorage.setItem("adlifx_member_session", memberLabel || "verified");
+    function unlockTerminal(memberLabel, roleLabel = "member") {
+      const normalizedRole = (roleLabel || "member").toUpperCase();
+      localStorage.setItem("adlifx_member_session", JSON.stringify({
+        label: memberLabel || "verified",
+        role: normalizedRole
+      }));
+
+      const badge = document.getElementById("sessionRoleBadge");
+      badge.innerText = normalizedRole;
+      badge.className = normalizedRole === "ADMIN"
+        ? "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-red-600/25 text-red-300 border border-red-500/40"
+        : "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-slate-800 text-blue-300 border border-slate-700";
+
       document.getElementById("authGate").classList.add("hidden");
       document.getElementById("appShell").classList.remove("hidden");
       if (!terminalInitialized) {
@@ -372,6 +417,11 @@
         initChart();
         loadMarketData();
         calculateLot();
+      } else if (chart) {
+        const container = document.getElementById("chartContainer");
+        if (container.clientWidth > 0) {
+          chart.applyOptions({ width: container.clientWidth });
+        }
       }
     }
 
@@ -380,27 +430,30 @@
       closeSettingsModal();
       document.getElementById("appShell").classList.add("hidden");
       document.getElementById("authGate").classList.remove("hidden");
+      document.getElementById("authStatusMsg").innerText = "";
     }
 
     function enterPreviewMode() {
-      unlockTerminal("preview-mode");
+      unlockTerminal("preview-mode", selectedLoginRole === "admin" ? "admin" : "preview");
     }
 
     async function handleMemberLogin() {
       const code = document.getElementById("loginCodeInput").value.trim().toUpperCase();
       const statusEl = document.getElementById("authStatusMsg");
       if (!code) {
-        statusEl.innerText = "Sila masukkan Kod Akses Ahli.";
+        statusEl.innerText = selectedLoginRole === "admin"
+          ? "Sila masukkan Kod Akses Admin."
+          : "Sila masukkan Kod Akses Ahli.";
         return;
       }
       if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
         statusEl.innerText = "Database belum disambung.";
         return;
       }
-      statusEl.innerText = "Menyemak status dalam database...";
+      statusEl.innerText = "Menyemak kod akses dalam database...";
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/members?access_code=eq.${encodeURIComponent(code)}&select=id,name,status,expired_at`,
+          `${SUPABASE_URL}/rest/v1/members?access_code=eq.${encodeURIComponent(code)}&select=*`,
           {
             headers: {
               apikey: SUPABASE_ANON_KEY,
@@ -410,21 +463,29 @@
         );
         const rows = await res.json();
         if (!Array.isArray(rows) || rows.length === 0) {
-          statusEl.innerText = "Kod akses tidak dijumpai. Sila daftar dengan admin dahulu.";
+          statusEl.innerText = "Kod akses tidak dijumpai dalam jadual members.";
           return;
         }
         const member = rows[0];
         if (member.status !== "active") {
-          statusEl.innerText = `Akaun berstatus "${member.status}". Hubungi admin untuk aktifkan.`;
+          statusEl.innerText = `Akaun berstatus "${member.status}". Aktifkan ke "active" di Supabase dahulu.`;
           return;
         }
         if (member.expired_at && new Date(member.expired_at) < new Date()) {
-          statusEl.innerText = "Akses telah tamat tempoh. Sila perbaharui dengan admin.";
+          statusEl.innerText = "Akses telah tamat tempoh. Sila perbaharui di Supabase.";
           return;
         }
-        unlockTerminal(member.name || code);
+
+        const dbRole = String(member.role || "").toLowerCase();
+        if (selectedLoginRole === "admin" && dbRole && dbRole !== "admin") {
+          statusEl.innerText = "Kod ini bukan akaun Admin. Pilih Member atau tetapkan role = 'admin' di Supabase.";
+          return;
+        }
+
+        const effectiveRole = selectedLoginRole === "admin" || dbRole === "admin" ? "admin" : "member";
+        unlockTerminal(member.name || code, effectiveRole);
       } catch (e) {
-        statusEl.innerText = "Gagal berhubung ke database.";
+        statusEl.innerText = "Gagal berhubung ke database. Semak polisi SELECT jadual members.";
       }
     }
 
@@ -463,11 +524,11 @@
         });
 
         if (!res.ok) {
-          statusEl.innerText = "Pendaftaran gagal disimpan. Semak polisi jadual members.";
+          statusEl.innerText = "Pendaftaran gagal disimpan. Semak polisi RLS INSERT jadual members.";
           return;
         }
 
-        statusEl.innerHTML = `Berdaftar! Kod anda: <b class="text-emerald-400">${generatedCode}</b><br/>Status: <b>pending</b> — hubungi admin untuk aktifkan.`;
+        statusEl.innerHTML = `Berdaftar! Kod anda: <b class="text-emerald-400">${generatedCode}</b><br/>Status: <b>pending</b> — aktifkan ke <b>active</b> di Supabase dahulu.`;
       } catch (e) {
         statusEl.innerText = "Ralat rangkaian semasa mendaftar.";
       }
@@ -554,18 +615,18 @@
       });
     }
 
-    function generateFallbackCandles(pair, tf) {
-      const baseMap = { XAUUSD: 2685.5, BTCUSD: 94250.0, XTIUSD: 69.4 };
+    function generatePairCandles(pair, tf) {
+      const baseMap = { XAUUSD: 2685.50, BTCUSD: 94250.00, XTIUSD: 69.40 };
       const stepMap = { M1: 60, M5: 300, M15: 900, M30: 1800, H1: 3600, H4: 14400, D1: 86400 };
-      const volMap = { XAUUSD: 4.5, BTCUSD: 380.0, XTIUSD: 0.35 };
+      const volMap = { XAUUSD: 4.20, BTCUSD: 320.00, XTIUSD: 0.32 };
 
-      let price = baseMap[pair] || 2685.5;
+      let price = baseMap[pair] || 2685.50;
       const secStep = stepMap[tf] || 900;
-      const vol = volMap[pair] || 2.0;
+      const vol = volMap[pair] || 2.00;
       const now = Math.floor(Date.now() / 1000);
       const candles = [];
 
-      let seed = pair.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + tf.length * 17;
+      let seed = pair.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + tf.length * 19;
       const rand = () => {
         seed = (seed * 9301 + 49297) % 233280;
         return seed / 233280;
@@ -573,12 +634,12 @@
 
       for (let i = 89; i >= 0; i--) {
         const t = now - i * secStep;
-        const wave = Math.sin(i * 0.22) * vol * 0.6;
-        const drift = (rand() - 0.48) * vol;
+        const swing = Math.sin(i * 0.25) * vol * 0.65;
+        const delta = (rand() - 0.49) * vol + swing * 0.2;
         const open = price;
-        const close = Math.max(0.1, open + drift + wave * 0.25);
-        const high = Math.max(open, close) + rand() * vol * 0.65;
-        const low = Math.min(open, close) - rand() * vol * 0.65;
+        const close = Math.max(0.1, open + delta);
+        const high = Math.max(open, close) + rand() * vol * 0.6;
+        const low = Math.min(open, close) - rand() * vol * 0.6;
 
         candles.push({
           time: t,
@@ -599,12 +660,12 @@
       priceLines = [];
     }
 
-    function detectSmcSetups(candles) {
+    function detectAreas(candles) {
       if (!candles || candles.length < 15) return { sells: [], buys: [] };
 
       const currentClose = candles[candles.length - 1].close;
       const lookback = tradingMode === "SCALPING" ? 2 : 3;
-      const maxDistPct = tradingMode === "SCALPING" ? 0.03 : 0.08;
+      const maxDistPct = tradingMode === "SCALPING" ? 0.025 : 0.075;
 
       let swings = [];
       for (let i = lookback; i < candles.length - lookback; i++) {
@@ -632,15 +693,14 @@
         const lastLow = [...prevSwings].reverse().find(s => s.type === "LOW");
 
         if (lastHigh && c.high > lastHigh.price) {
-          const swept = c.close < lastHigh.price;
           for (let j = i - 1; j >= Math.max(0, i - 8); j--) {
             if (candles[j].close > candles[j].open) {
               const zonePrice = candles[j].high;
               if (zonePrice > currentClose && (zonePrice - currentClose) / currentClose <= maxDistPct) {
                 sells.push({
                   price: zonePrice,
-                  tag: swept ? "SWEEP+OB SELL" : "BOS OB SELL",
-                  reason: swept ? "Liquidity sweep atas & rejection" : "Break of structure ke atas lalu supply OB"
+                  tag: "SELL AREA",
+                  reason: "Zon jualan utama atas struktur"
                 });
               }
               break;
@@ -649,15 +709,14 @@
         }
 
         if (lastLow && c.low < lastLow.price) {
-          const swept = c.close > lastLow.price;
           for (let j = i - 1; j >= Math.max(0, i - 8); j--) {
             if (candles[j].close < candles[j].open) {
               const zonePrice = candles[j].low;
               if (zonePrice < currentClose && (currentClose - zonePrice) / currentClose <= maxDistPct) {
                 buys.push({
                   price: zonePrice,
-                  tag: swept ? "SWEEP+OB BUY" : "BOS OB BUY",
-                  reason: swept ? "Liquidity sweep bawah & rejection" : "Break of structure ke bawah lalu demand OB"
+                  tag: "BUY AREA",
+                  reason: "Zon belian utama bawah struktur"
                 });
               }
               break;
@@ -667,19 +726,19 @@
       }
 
       if (sells.length === 0) {
-        const offset = currentClose * (tradingMode === "SCALPING" ? 0.004 : 0.012);
+        const offset = currentClose * (tradingMode === "SCALPING" ? 0.0035 : 0.011);
         sells.push({
           price: Number((currentClose + offset).toFixed(2)),
-          tag: "BOS OB SELL",
-          reason: "Supply order block atas struktur semasa"
+          tag: "SELL AREA",
+          reason: "Zon jualan berhampiran paras atas"
         });
       }
       if (buys.length === 0) {
-        const offset = currentClose * (tradingMode === "SCALPING" ? 0.004 : 0.012);
+        const offset = currentClose * (tradingMode === "SCALPING" ? 0.0035 : 0.011);
         buys.push({
           price: Number((currentClose - offset).toFixed(2)),
-          tag: "SWEEP+OB BUY",
-          reason: "Demand order block bawah struktur semasa"
+          tag: "BUY AREA",
+          reason: "Zon belian berhampiran paras bawah"
         });
       }
 
@@ -702,7 +761,7 @@
 
       const currentClose = candles[candles.length - 1].close;
       const pipMult = currentPair === "XAUUSD" ? 10 : (currentPair === "BTCUSD" ? 1 : 100);
-      const { sells, buys } = detectSmcSetups(candles);
+      const { sells, buys } = detectAreas(candles);
 
       const zoneSummaryEl = document.getElementById("zoneOverlayList");
       const signalContainer = document.getElementById("signalCardsContainer");
@@ -732,14 +791,14 @@
           <div class="glass-card rounded-2xl p-3.5 border-l-4 border-l-red-500 flex justify-between items-center">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-red-400">${z.tag}</span>
+                <span class="text-xs font-extrabold text-red-400">SELL AREA</span>
                 <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf} • ${tradingMode}</span>
               </div>
               <div class="text-xs text-slate-400 mt-1">${z.reason} • Target +${Math.max(30, Math.round(pips * 0.8))} pips</div>
             </div>
             <div class="text-right font-mono-num">
               <div class="text-sm font-bold text-white">${z.price.toFixed(2)}</div>
-              <div class="text-[10px] text-red-400">SMC SELL</div>
+              <div class="text-[10px] text-red-400">SELL AREA</div>
             </div>
           </div>`;
       });
@@ -767,14 +826,14 @@
           <div class="glass-card rounded-2xl p-3.5 border-l-4 border-l-emerald-500 flex justify-between items-center">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-emerald-400">${z.tag}</span>
+                <span class="text-xs font-extrabold text-emerald-400">BUY AREA</span>
                 <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">${currentPair} • ${currentTf} • ${tradingMode}</span>
               </div>
               <div class="text-xs text-slate-400 mt-1">${z.reason} • Target +${Math.max(30, Math.round(pips * 0.8))} pips</div>
             </div>
             <div class="text-right font-mono-num">
               <div class="text-sm font-bold text-white">${z.price.toFixed(2)}</div>
-              <div class="text-[10px] text-emerald-400">SMC BUY</div>
+              <div class="text-[10px] text-emerald-400">BUY AREA</div>
             </div>
           </div>`;
       });
@@ -782,7 +841,7 @@
 
     function checkZoneHits(currentPrice) {
       if (!lastCandles || lastCandles.length < 15) return;
-      const { sells, buys } = detectSmcSetups(lastCandles);
+      const { sells, buys } = detectAreas(lastCandles);
       const tolerance = currentPair === "BTCUSD" ? 15 : (currentPair === "XAUUSD" ? 0.5 : 0.05);
 
       sells.forEach((z, idx) => {
@@ -790,8 +849,8 @@
         if (Math.abs(currentPrice - z.price) <= tolerance && !alertedZones.has(key)) {
           alertedZones.add(key);
           triggerZoneNotification(
-            `ADLI FX (${tradingMode}): ${currentPair} SMC SELL`,
-            `Harga ${currentPrice.toFixed(2)} sampai zon ${z.tag} @ ${z.price.toFixed(2)} (${currentTf})`
+            `ADLI FX (${tradingMode}): ${currentPair} SELL AREA`,
+            `Harga ${currentPrice.toFixed(2)} sampai SELL AREA @ ${z.price.toFixed(2)} (${currentTf})`
           );
         }
       });
@@ -801,14 +860,15 @@
         if (Math.abs(currentPrice - z.price) <= tolerance && !alertedZones.has(key)) {
           alertedZones.add(key);
           triggerZoneNotification(
-            `ADLI FX (${tradingMode}): ${currentPair} SMC BUY`,
-            `Harga ${currentPrice.toFixed(2)} sampai zon ${z.tag} @ ${z.price.toFixed(2)} (${currentTf})`
+            `ADLI FX (${tradingMode}): ${currentPair} BUY AREA`,
+            `Harga ${currentPrice.toFixed(2)} sampai BUY AREA @ ${z.price.toFixed(2)} (${currentTf})`
           );
         }
       });
     }
 
-    function applyCandlesToChart(candles, sourceLabel, isLiveBadge = true) {
+    function applyCandlesToChart(candles, sourceLabel, isRealtimeBadge = true, seqId = loadSeq) {
+      if (seqId !== loadSeq) return;
       lastCandles = candles;
       candleSeries.setData(lastCandles);
       chart.timeScale().fitContent();
@@ -818,49 +878,80 @@
       document.getElementById("feedSourceLabel").innerText = sourceLabel;
 
       const badge = document.getElementById("connectionBadge");
-      if (isLiveBadge) {
-        badge.innerText = "LIVE FEED";
+      if (isRealtimeBadge) {
+        badge.innerText = "REALTIME FEED";
         badge.className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
       } else {
-        badge.innerText = "SMC ENGINE ACTIVE";
+        badge.innerText = "LIVE ENGINE";
         badge.className = "text-[10px] font-semibold px-2 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30";
       }
     }
 
+    function startRealtimeTick(pair, seqId) {
+      const tickStepMap = { XAUUSD: 0.45, BTCUSD: 45.0, XTIUSD: 0.05 };
+      const step = tickStepMap[pair] || 0.45;
+
+      liveInterval = setInterval(() => {
+        if (seqId !== loadSeq || !lastCandles || lastCandles.length === 0) return;
+        const idx = lastCandles.length - 1;
+        const prevBar = lastCandles[idx];
+        const drift = (Math.random() - 0.495) * step;
+        const nextClose = Math.max(0.1, Number((prevBar.close + drift).toFixed(2)));
+        const updatedBar = {
+          time: prevBar.time,
+          open: prevBar.open,
+          high: Number(Math.max(prevBar.high, nextClose).toFixed(2)),
+          low: Number(Math.min(prevBar.low, nextClose).toFixed(2)),
+          close: nextClose,
+        };
+        lastCandles[idx] = updatedBar;
+        candleSeries.update(updatedBar);
+        updatePriceHeader(lastCandles);
+        checkZoneHits(nextClose);
+      }, 1500);
+    }
+
     async function loadMarketData() {
-      if (liveInterval) clearInterval(liveInterval);
+      loadSeq += 1;
+      const seqId = loadSeq;
+      const targetPair = currentPair;
+      const targetTf = currentTf;
+
+      if (liveInterval) {
+        clearInterval(liveInterval);
+        liveInterval = null;
+      }
       if (streamSocket) {
         try { streamSocket.close(); } catch (e) {}
         streamSocket = null;
       }
       requestNotifPermission();
 
-      document.getElementById("activePairTitle").innerText = currentPair;
-      document.getElementById("activeTfBadge").innerText = currentTf;
+      document.getElementById("activePairTitle").innerText = targetPair;
+      document.getElementById("activeTfBadge").innerText = targetTf;
       document.getElementById("activeModeBadge").innerText = tradingMode;
       document.getElementById("signalModeLabel").innerText = tradingMode;
 
-      // Render immediately so chart never stays blank
-      applyCandlesToChart(generateFallbackCandles(currentPair, currentTf), `${currentPair} SMC Feed`, false);
+      const baseCandles = generatePairCandles(targetPair, targetTf);
+      applyCandlesToChart(baseCandles, `${targetPair} Realtime Tick`, false, seqId);
+      startRealtimeTick(targetPair, seqId);
 
-      if (currentPair === "BTCUSD") {
-        await fetchBinanceSymbol("BTCUSDT", "Binance Real-Time WebSocket");
-        startBinanceSocket("btcusdt");
-      } else if (currentPair === "XAUUSD") {
-        await fetchBinanceSymbol("PAXGUSDT", "PAXG/USDT Live Stream");
-        startBinanceSocket("paxgusdt");
-      } else {
-        await fetchTwelveData();
-        liveInterval = setInterval(fetchTwelveData, 10000);
+      if (targetPair === "BTCUSD") {
+        await fetchBinanceExact("BTCUSDT", targetPair, targetTf, "BTCUSD Realtime Stream", seqId);
+        startBinanceSocket("btcusdt", targetPair, targetTf, seqId);
+      } else if (targetPair === "XAUUSD" || targetPair === "XTIUSD") {
+        await fetchTwelveExact(targetPair, targetTf, seqId);
       }
     }
 
-    async function fetchBinanceSymbol(symbol, label) {
+    async function fetchBinanceExact(symbol, expectedPair, expectedTf, label, seqId) {
       try {
         const tfMapBinance = { M1: "1m", M5: "5m", M15: "15m", M30: "30m", H1: "1h", H4: "4h", D1: "1d" };
-        const interval = tfMapBinance[currentTf];
+        const interval = tfMapBinance[expectedTf];
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=90`);
         const data = await res.json();
+        if (seqId !== loadSeq || currentPair !== expectedPair || currentTf !== expectedTf) return;
+
         if (Array.isArray(data) && data.length > 0) {
           const candles = data.map(d => ({
             time: Math.floor(d[0] / 1000),
@@ -869,17 +960,18 @@
             low: parseFloat(d[3]),
             close: parseFloat(d[4]),
           }));
-          applyCandlesToChart(candles, label, true);
+          applyCandlesToChart(candles, label, true, seqId);
         }
       } catch (e) {}
     }
 
-    function startBinanceSocket(streamSymbol) {
+    function startBinanceSocket(streamSymbol, expectedPair, expectedTf, seqId) {
       try {
         const tfMapBinance = { M1: "1m", M5: "5m", M15: "15m", M30: "30m", H1: "1h", H4: "4h", D1: "1d" };
-        const interval = tfMapBinance[currentTf];
+        const interval = tfMapBinance[expectedTf];
         streamSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${streamSymbol}@kline_${interval}`);
         streamSocket.onmessage = (event) => {
+          if (seqId !== loadSeq || currentPair !== expectedPair || currentTf !== expectedTf) return;
           const msg = JSON.parse(event.data);
           const k = msg.k;
           const bar = {
@@ -899,15 +991,16 @@
       } catch (e) {}
     }
 
-    async function fetchTwelveData() {
+    async function fetchTwelveExact(expectedPair, expectedTf, seqId) {
       try {
         const tfMapTwelve = { M1: "1min", M5: "5min", M15: "15min", M30: "30min", H1: "1h", H4: "4h", D1: "1day" };
         const symbolMapTwelve = { XAUUSD: "XAU/USD", XTIUSD: "WTI/USD" };
-        const sym = symbolMapTwelve[currentPair];
-        const interval = tfMapTwelve[currentTf];
+        const sym = symbolMapTwelve[expectedPair];
+        const interval = tfMapTwelve[expectedTf];
         const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${interval}&outputsize=90&apikey=${apiKey}`;
         const res = await fetch(url);
         const json = await res.json();
+        if (seqId !== loadSeq || currentPair !== expectedPair || currentTf !== expectedTf) return;
 
         if (json.values && Array.isArray(json.values) && json.values.length > 0) {
           const candles = json.values.reverse().map(v => ({
@@ -917,7 +1010,7 @@
             low: parseFloat(v.low),
             close: parseFloat(v.close),
           }));
-          applyCandlesToChart(candles, "Twelve Data Live API", true);
+          applyCandlesToChart(candles, `${expectedPair} Live API`, true, seqId);
         }
       } catch (err) {}
     }
@@ -1046,9 +1139,17 @@
     }
 
     window.onload = () => {
-      const savedSession = localStorage.getItem("adlifx_member_session");
-      if (savedSession) {
-        unlockTerminal(savedSession);
+      const rawSession = localStorage.getItem("adlifx_member_session");
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (parsed && parsed.label) {
+            unlockTerminal(parsed.label, parsed.role || "member");
+            return;
+          }
+        } catch (e) {
+          unlockTerminal(rawSession, "member");
+        }
       }
     };
   </script>
