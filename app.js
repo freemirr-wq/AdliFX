@@ -1,8 +1,8 @@
 /* =========================================================
    ADLI FX INTEL INDICATOR
-   APP ENGINE V2.0
+   APP ENGINE V2.1
    Twelve Data + Supabase + Lightweight Charts
-   Technical rule-based analysis — not machine learning
+   Technical rule-based analysis — NOT machine learning
 ========================================================= */
 
 (function () {
@@ -11,7 +11,7 @@
     const CONFIG = window.ADLI_CONFIG;
 
     if (!CONFIG) {
-        console.error("ADLI: config.js is missing.");
+        console.error("ADLI V2.1: config.js missing.");
         return;
     }
 
@@ -42,25 +42,94 @@
         "1d": "mtf1d"
     };
 
-    const REFRESH_MS = 120000;
-    const MTF_REFRESH_MS = 30 * 60 * 1000;
-    const MTF_DELAY_MS = 10000;
+    // Conservative refresh schedule for Twelve Data Free.
+    const REFRESH_MS = 5 * 60 * 1000;
+    const MTF_REFRESH_MS = 60 * 60 * 1000;
+
+    // Central request spacing to reduce rate-limit errors.
+    const REQUEST_GAP_MS = 8000;
 
     let currentTimeframe = "5m";
     let candles = [];
+
     let chart = null;
     let candleSeries = null;
+    let resizeObserver = null;
 
     let chartLoading = false;
     let mtfLoading = false;
+    let started = false;
 
     let refreshTimer = null;
     let mtfTimer = null;
 
+    let lastRequestTime = 0;
     let lastMtfUpdate = 0;
+
+    let requestQueue = Promise.resolve();
     let mtfCache = {};
 
-    let resizeObserver = null;
+    let lastChartError = null;
+
+    /* =====================================================
+       HELPERS
+    ===================================================== */
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function setText(id, value, color) {
+        const element = document.getElementById(id);
+
+        if (!element) return;
+
+        element.textContent = value;
+
+        if (color) {
+            element.style.color = color;
+        }
+    }
+
+    function formatPrice(value) {
+        return Number(value).toFixed(2);
+    }
+
+    function queueRequest(task) {
+        const run = requestQueue.then(async () => {
+            const elapsed = Date.now() - lastRequestTime;
+            const wait = Math.max(0, REQUEST_GAP_MS - elapsed);
+
+            if (wait > 0) await sleep(wait);
+
+            lastRequestTime = Date.now();
+
+            return task();
+        });
+
+        requestQueue = run.catch(() => {});
+        return run;
+    }
+
+    function dispatchMarketEvent(status, error) {
+        window.dispatchEvent(
+            new CustomEvent("adli:market-update", {
+                detail: {
+                    status: status,
+                    symbol: SYMBOL,
+                    price: Market.price,
+                    candles: candles,
+                    timeframe: currentTimeframe,
+                    updatedAt: Market.lastUpdated,
+                    error: error || null
+                }
+            })
+        );
+    }
+
+    /* =====================================================
+       MARKET DATA ENGINE
+    ===================================================== */
 
     const Market = {
         status: "WAITING",
@@ -72,66 +141,104 @@
             const container =
                 document.getElementById("priceChart");
 
-            if (!container || !window.LightweightCharts) {
-                console.error("ADLI: Chart library unavailable.");
+            if (!container) {
+                console.error("ADLI: priceChart element missing.");
                 return;
             }
 
-            chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth,
-                height: container.clientHeight,
+            if (!window.LightweightCharts) {
+                this.status = "ERROR";
+                this.error = "Chart library unavailable.";
+                this.updateUI();
+                return;
+            }
 
-                layout: {
-                    background: { color: "#101827" },
-                    textColor: "#8492a6"
-                },
+            if (chart) return;
 
-                grid: {
-                    vertLines: { color: "#1c293a" },
-                    horzLines: { color: "#1c293a" }
-                },
+            try {
+                chart = LightweightCharts.createChart(container, {
+                    width: Math.max(300, container.clientWidth),
+                    height: Math.max(250, container.clientHeight),
 
-                rightPriceScale: {
-                    borderColor: "#263247"
-                },
+                    layout: {
+                        background: { color: "#101827" },
+                        textColor: "#8492a6"
+                    },
 
-                timeScale: {
-                    borderColor: "#263247",
-                    timeVisible: true,
-                    secondsVisible: false
-                },
+                    grid: {
+                        vertLines: { color: "#1c293a" },
+                        horzLines: { color: "#1c293a" }
+                    },
 
-                crosshair: {
-                    mode: 1
-                },
+                    rightPriceScale: {
+                        borderColor: "#263247"
+                    },
 
-                localization: {
-                    priceFormatter: price =>
-                        Number(price).toFixed(2)
+                    timeScale: {
+                        borderColor: "#263247",
+                        timeVisible: true,
+                        secondsVisible: false
+                    },
+
+                    crosshair: {
+                        mode: 1
+                    },
+
+                    localization: {
+                        priceFormatter: price =>
+                            Number(price).toFixed(2)
+                    }
+                });
+
+                // Supports both Lightweight Charts v4 and v5.
+                if (typeof chart.addCandlestickSeries === "function") {
+                    candleSeries = chart.addCandlestickSeries({
+                        upColor: "#00c087",
+                        downColor: "#f6465d",
+                        borderUpColor: "#00c087",
+                        borderDownColor: "#f6465d",
+                        wickUpColor: "#00c087",
+                        wickDownColor: "#f6465d",
+                        priceLineVisible: true
+                    });
+                } else if (typeof chart.addSeries === "function" &&
+                           LightweightCharts.CandlestickSeries) {
+                    candleSeries = chart.addSeries(
+                        LightweightCharts.CandlestickSeries,
+                        {
+                            upColor: "#00c087",
+                            downColor: "#f6465d",
+                            borderUpColor: "#00c087",
+                            borderDownColor: "#f6465d",
+                            wickUpColor: "#00c087",
+                            wickDownColor: "#f6465d",
+                            priceLineVisible: true
+                        }
+                    );
+                } else {
+                    throw new Error(
+                        "Unsupported Lightweight Charts version."
+                    );
                 }
-            });
 
-            candleSeries = chart.addCandlestickSeries({
-                upColor: "#00c087",
-                downColor: "#f6465d",
-                borderUpColor: "#00c087",
-                borderDownColor: "#f6465d",
-                wickUpColor: "#00c087",
-                wickDownColor: "#f6465d",
-                priceLineVisible: true
-            });
+                if (window.ResizeObserver) {
+                    resizeObserver = new ResizeObserver(() => {
+                        this.resizeChart();
+                    });
 
-            if (window.ResizeObserver) {
-                resizeObserver = new ResizeObserver(() => {
+                    resizeObserver.observe(container);
+                }
+
+                window.addEventListener("resize", () => {
                     this.resizeChart();
                 });
 
-                resizeObserver.observe(container);
+            } catch (error) {
+                this.status = "ERROR";
+                this.error = "Chart: " + error.message;
+                console.error("ADLI CHART ERROR:", error);
+                this.updateUI();
             }
-
-            window.addEventListener("resize", () => {
-                this.resizeChart();
-            });
         },
 
         convertCandles(values) {
@@ -139,11 +246,20 @@
 
             return values
                 .map(item => {
-                    const dateString =
-                        String(item.datetime || "").replace(" ", "T");
+                    const raw = String(item.datetime || "").trim();
 
-                    const timestamp =
-                        new Date(dateString + "Z").getTime();
+                    // Twelve Data normally returns:
+                    // YYYY-MM-DD HH:mm:ss
+                    const normalized = raw.replace(" ", "T");
+
+                    let timestamp;
+
+                    if (/[zZ]|[+-]\d{2}:\d{2}$/.test(normalized)) {
+                        timestamp = Date.parse(normalized);
+                    } else {
+                        // Twelve Data datetime is treated as UTC.
+                        timestamp = Date.parse(normalized + "Z");
+                    }
 
                     return {
                         time: Math.floor(timestamp / 1000),
@@ -158,7 +274,8 @@
                     Number.isFinite(item.open) &&
                     Number.isFinite(item.high) &&
                     Number.isFinite(item.low) &&
-                    Number.isFinite(item.close)
+                    Number.isFinite(item.close) &&
+                    item.high >= item.low
                 )
                 .sort((a, b) => a.time - b.time)
                 .filter((item, index, array) =>
@@ -173,11 +290,11 @@
             }
 
             if (CONFIG.MARKET_DATA_ENABLED !== true) {
-                throw new Error("Market data is disabled in config.js.");
+                throw new Error("Market data disabled in config.js.");
             }
 
             if (!FUNCTION_URL || !API_KEY) {
-                throw new Error("Supabase market data configuration is missing.");
+                throw new Error("Supabase configuration missing.");
             }
 
             const params = new URLSearchParams({
@@ -185,40 +302,53 @@
                 interval: TIMEFRAMES[timeframe]
             });
 
-            const response = await fetch(
-                FUNCTION_URL + "?" + params.toString(),
-                {
-                    method: "GET",
-                    headers: {
-                        "apikey": API_KEY,
-                        "Authorization": "Bearer " + API_KEY
-                    }
+            const url = FUNCTION_URL + "?" + params.toString();
+
+            // Publishable key is sent as apikey.
+            // Verify JWT must remain OFF for this public data function.
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "apikey": API_KEY
                 }
-            );
+            });
 
             let result;
 
             try {
                 result = await response.json();
             } catch (error) {
-                throw new Error("Market data response is not valid JSON.");
+                throw new Error(
+                    "Invalid JSON response. HTTP " + response.status
+                );
             }
 
-            if (!response.ok || result.success !== true) {
+            if (!response.ok) {
                 throw new Error(
-                    result.error || "Market data request failed."
+                    "HTTP " + response.status + ": " +
+                    (result.error || result.message || "Request failed")
+                );
+            }
+
+            if (result.success !== true) {
+                throw new Error(
+                    result.error || result.message ||
+                    "Provider did not return success=true."
                 );
             }
 
             if (!Array.isArray(result.values) ||
                 result.values.length === 0) {
-                throw new Error("No candle data received.");
+                throw new Error("Provider returned no candle data.");
             }
 
             const converted = this.convertCandles(result.values);
 
-            if (!converted.length) {
-                throw new Error("Candle data format is invalid.");
+            if (converted.length < 20) {
+                throw new Error(
+                    "Insufficient candles: " + converted.length +
+                    " received; 20 required."
+                );
             }
 
             return converted;
@@ -228,11 +358,15 @@
             if (chartLoading) return;
 
             chartLoading = true;
-            this.status = "LOADING";
+
+            this.status = candles.length ? "UPDATING" : "LOADING";
+            this.error = null;
             this.updateUI();
 
             try {
-                const received = await this.request(timeframe);
+                const received = await queueRequest(
+                    () => this.request(timeframe)
+                );
 
                 candles = received;
                 currentTimeframe = timeframe;
@@ -241,27 +375,32 @@
                 this.lastUpdated = new Date();
                 this.status = "CONNECTED";
                 this.error = null;
+                lastChartError = null;
 
                 if (candleSeries && chart) {
                     candleSeries.setData(candles);
                     chart.timeScale().fitContent();
                 }
 
+                analyseCurrent();
                 this.updateUI();
-                this.analyseCurrent();
 
-                console.log("ADLI MARKET DATA:", {
-                    symbol: SYMBOL,
+                console.log("ADLI V2.1 DATA:", {
                     timeframe: timeframe,
-                    candleCount: candles.length,
-                    price: this.price
+                    count: candles.length,
+                    price: this.price,
+                    updated: this.lastUpdated
                 });
 
             } catch (error) {
                 this.status = "ERROR";
                 this.error = error.message;
+                lastChartError = error.message;
 
-                console.error("ADLI MARKET ERROR:", error);
+                // Do not leave old signal displayed as current.
+                clearSignal("DATA ERROR — SIGNAL PAUSED");
+
+                console.error("ADLI V2.1 MARKET ERROR:", error);
 
             } finally {
                 chartLoading = false;
@@ -285,23 +424,29 @@
             if (priceElement) {
                 priceElement.textContent =
                     this.price !== null
-                        ? this.price.toFixed(2)
+                        ? formatPrice(this.price)
                         : "--";
             }
 
             if (statusElement) {
-                statusElement.textContent = this.status;
+                statusElement.textContent =
+                    this.status === "ERROR"
+                        ? "ERROR: " + (this.error || "Unknown error")
+                        : this.status;
 
                 statusElement.style.color =
                     this.status === "CONNECTED"
                         ? "#00c087"
-                        : this.status === "LOADING"
+                        : this.status === "UPDATING" ||
+                          this.status === "LOADING"
                             ? "#d9b45b"
                             : "#f6465d";
+
+                statusElement.title = this.error || "";
             }
 
             if (emptyElement) {
-                if (this.status === "CONNECTED") {
+                if (candles.length > 0) {
                     emptyElement.style.display = "none";
                 } else {
                     emptyElement.style.display = "flex";
@@ -326,19 +471,7 @@
                 }
             }
 
-            window.dispatchEvent(
-                new CustomEvent("adli:market-update", {
-                    detail: {
-                        status: this.status,
-                        symbol: SYMBOL,
-                        price: this.price,
-                        candles: candles,
-                        timeframe: currentTimeframe,
-                        updatedAt: this.lastUpdated,
-                        error: this.error
-                    }
-                })
-            );
+            dispatchMarketEvent(this.status, this.error);
         },
 
         setTimeframe(timeframe) {
@@ -379,16 +512,13 @@
     };
 
     /* =====================================================
-       TECHNICAL ANALYSIS ENGINE
+       TECHNICAL ANALYSIS
     ===================================================== */
 
     const Analysis = {
-
         ema(values, period) {
             if (!Array.isArray(values) ||
-                values.length < period) {
-                return null;
-            }
+                values.length < period) return null;
 
             const multiplier = 2 / (period + 1);
 
@@ -410,9 +540,7 @@
 
         rsi(values, period = 14) {
             if (!Array.isArray(values) ||
-                values.length <= period) {
-                return null;
-            }
+                values.length <= period) return null;
 
             let gains = 0;
             let losses = 0;
@@ -430,17 +558,18 @@
             for (let i = period + 1; i < values.length; i++) {
                 const change = values[i] - values[i - 1];
 
-                const gain = Math.max(change, 0);
-                const loss = Math.max(-change, 0);
-
                 averageGain =
-                    (averageGain * (period - 1) + gain) / period;
+                    (averageGain * (period - 1) +
+                    Math.max(change, 0)) / period;
 
                 averageLoss =
-                    (averageLoss * (period - 1) + loss) / period;
+                    (averageLoss * (period - 1) +
+                    Math.max(-change, 0)) / period;
             }
 
-            if (averageLoss === 0) return 100;
+            if (averageLoss === 0) {
+                return averageGain === 0 ? 50 : 100;
+            }
 
             const rs = averageGain / averageLoss;
 
@@ -449,9 +578,7 @@
 
         atr(data, period = 14) {
             if (!Array.isArray(data) ||
-                data.length <= period) {
-                return null;
-            }
+                data.length <= period) return null;
 
             const ranges = [];
 
@@ -459,13 +586,11 @@
                 const current = data[i];
                 const previous = data[i - 1];
 
-                const tr = Math.max(
+                ranges.push(Math.max(
                     current.high - current.low,
                     Math.abs(current.high - previous.close),
                     Math.abs(current.low - previous.close)
-                );
-
-                ranges.push(tr);
+                ));
             }
 
             const recent = ranges.slice(-period);
@@ -492,9 +617,8 @@
             const rsi = this.rsi(closes, 14);
             const atr = this.atr(data, 14);
 
-            if (ema9 === null ||
-                ema20 === null ||
-                rsi === null) {
+            if (ema9 === null || ema20 === null ||
+                rsi === null || atr === null) {
                 return {
                     ready: false,
                     signal: "WAIT",
@@ -504,12 +628,13 @@
             }
 
             let score = 0;
+            const latestPrice = closes[closes.length - 1];
 
             if (ema9 > ema20) score += 2;
             if (ema9 < ema20) score -= 2;
 
-            if (closes[closes.length - 1] > ema20) score += 1;
-            if (closes[closes.length - 1] < ema20) score -= 1;
+            if (latestPrice > ema20) score += 1;
+            if (latestPrice < ema20) score -= 1;
 
             if (rsi >= 55 && rsi < 75) score += 1;
             if (rsi <= 45 && rsi > 25) score -= 1;
@@ -519,22 +644,19 @@
             if (score >= 3) signal = "BUY";
             if (score <= -3) signal = "SELL";
 
-            const strength = Math.min(
-                100,
-                Math.round(Math.abs(score) / 4 * 100)
-            );
-
             return {
                 ready: true,
                 signal: signal,
-                strength: strength,
+                strength: Math.min(
+                    100,
+                    Math.round(Math.abs(score) / 4 * 100)
+                ),
                 score: score,
                 ema9: ema9,
                 ema20: ema20,
                 rsi: rsi,
                 atr: atr,
-                price: closes[closes.length - 1],
-                closes: closes,
+                price: latestPrice,
                 data: data
             };
         },
@@ -569,7 +691,6 @@
 
             const recent = data.slice(-10);
             const latest = recent[recent.length - 1];
-
             const previous = recent.slice(0, -1);
 
             const previousHigh =
@@ -597,13 +718,8 @@
             const a = data[data.length - 3];
             const c = data[data.length - 1];
 
-            if (c.low > a.high) {
-                return "BULLISH GAP";
-            }
-
-            if (c.high < a.low) {
-                return "BEARISH GAP";
-            }
+            if (c.low > a.high) return "BULLISH GAP";
+            if (c.high < a.low) return "BEARISH GAP";
 
             return "NO CLEAR FVG";
         },
@@ -630,26 +746,42 @@
        SIGNAL DISPLAY
     ===================================================== */
 
-    function setText(id, value, color) {
-        const element = document.getElementById(id);
+    function clearSignal(reason) {
+        setText("aiSignal", "WAIT", "#d9b45b");
+        setText("signalStrength", reason || "WAITING", "#d9b45b");
+        setText("signalEMA", "--");
+        setText("signalRSI", "--");
+        setText("signalTF", currentTimeframe.toUpperCase());
+        setText("signalUpdated", "--");
 
-        if (!element) return;
+        setText("structure", "WAITING");
+        setText("liquidity", "WAITING");
+        setText("fvg", "WAITING");
+        setText("orderBlock", "WAITING");
 
-        element.textContent = value;
+        setText("entry", "--");
+        setText("stopLoss", "--");
+        setText("tp1", "--");
+        setText("tp2", "--");
+        setText("tp3", "--");
 
-        if (color) {
-            element.style.color = color;
+        const meter = document.getElementById("signalMeterFill");
+
+        if (meter) {
+            meter.style.width = "0%";
         }
     }
 
     function analyseCurrent() {
-        if (!candles.length) return;
+        if (!candles.length) {
+            clearSignal("WAITING FOR DATA");
+            return;
+        }
 
         const result = Analysis.analyse(candles);
 
         if (!result.ready) {
-            setText("aiSignal", "WAIT");
-            setText("signalStrength", result.reason);
+            clearSignal(result.reason);
             return;
         }
 
@@ -698,8 +830,7 @@
         const atr = result.atr;
 
         if (!Number.isFinite(price) ||
-            !Number.isFinite(atr) ||
-            atr <= 0) {
+            !Number.isFinite(atr) || atr <= 0) {
             return;
         }
 
@@ -741,10 +872,6 @@
        MULTI TIMEFRAME ENGINE
     ===================================================== */
 
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     function updateMtfRow(timeframe, result) {
         const elementId = MTF_ELEMENTS[timeframe];
         const element = document.getElementById(elementId);
@@ -752,7 +879,7 @@
         if (!element) return;
 
         if (!result || !result.ready) {
-            element.textContent = "INSUFFICIENT DATA";
+            element.textContent = "WAITING";
             element.style.color = "#d9b45b";
             return;
         }
@@ -771,25 +898,24 @@
     async function refreshMTF(force = false) {
         if (mtfLoading) return;
 
-        const now = Date.now();
-
         if (!force &&
-            now - lastMtfUpdate < MTF_REFRESH_MS) {
+            Date.now() - lastMtfUpdate < MTF_REFRESH_MS) {
             return;
         }
 
         mtfLoading = true;
-
         setText("mtfUpdated", "UPDATING...");
 
         const frames = Object.keys(TIMEFRAMES);
+        let successCount = 0;
 
         try {
-            for (let i = 0; i < frames.length; i++) {
-                const timeframe = frames[i];
-
+            for (const timeframe of frames) {
                 try {
-                    const data = await Market.request(timeframe);
+                    const data = await queueRequest(
+                        () => Market.request(timeframe)
+                    );
+
                     const analysis = Analysis.analyse(data);
 
                     mtfCache[timeframe] = {
@@ -798,6 +924,7 @@
                     };
 
                     updateMtfRow(timeframe, analysis);
+                    successCount++;
 
                 } catch (error) {
                     console.error(
@@ -806,11 +933,22 @@
                         error.message
                     );
 
-                    updateMtfRow(timeframe, null);
-                }
+                    // Preserve last known result but mark it stale.
+                    const cached = mtfCache[timeframe];
 
-                if (i < frames.length - 1) {
-                    await sleep(MTF_DELAY_MS);
+                    if (cached) {
+                        const element = document.getElementById(
+                            MTF_ELEMENTS[timeframe]
+                        );
+
+                        if (element) {
+                            element.textContent =
+                                cached.result.signal + " (STALE)";
+                            element.style.color = "#d9b45b";
+                        }
+                    } else {
+                        updateMtfRow(timeframe, null);
+                    }
                 }
             }
 
@@ -818,7 +956,8 @@
 
             setText(
                 "mtfUpdated",
-                "UPDATED " + new Date().toLocaleTimeString()
+                successCount + "/7 UPDATED " +
+                new Date().toLocaleTimeString()
             );
 
         } finally {
@@ -839,25 +978,13 @@
 
                 button.classList.add("active");
 
-                window.dispatchEvent(
-                    new CustomEvent("adli:timeframe-change", {
-                        detail: {
-                            timeframe: button.dataset.tf
-                        }
-                    })
-                );
+                const timeframe = button.dataset.tf;
+
+                if (TIMEFRAMES[timeframe]) {
+                    Market.setTimeframe(timeframe);
+                }
             });
         });
-
-        window.addEventListener(
-            "adli:timeframe-change",
-            event => {
-                if (event.detail &&
-                    TIMEFRAMES[event.detail.timeframe]) {
-                    Market.setTimeframe(event.detail.timeframe);
-                }
-            }
-        );
     }
 
     /* =====================================================
@@ -865,11 +992,16 @@
     ===================================================== */
 
     function start() {
+        if (started) return;
+        started = true;
+
         Market.initChart();
         setupTimeframes();
 
+        // Start chart request first.
         Market.fetch(currentTimeframe);
 
+        // MTF calls are queued and spaced apart.
         refreshMTF(true);
 
         refreshTimer = setInterval(() => {
@@ -880,8 +1012,12 @@
             refreshMTF(false);
         }, MTF_REFRESH_MS);
 
-        console.log("ADLI FX INTEL INDICATOR V2.0 READY.");
+        console.log("ADLI FX INTEL APP ENGINE V2.1 READY.");
     }
+
+    /* =====================================================
+       PUBLIC API
+    ===================================================== */
 
     window.ADLI_MARKET = Market;
     window.ADLI_ANALYSIS = Analysis;
@@ -899,11 +1035,17 @@
 
         getPrice: () => Market.getPrice(),
 
-        getStatus: () => Market.getStatus()
+        getStatus: () => Market.getStatus(),
+
+        getError: () => lastChartError,
+
+        getMtfCache: () => mtfCache
     };
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", start);
+        document.addEventListener("DOMContentLoaded", start, {
+            once: true
+        });
     } else {
         start();
     }
