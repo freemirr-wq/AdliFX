@@ -15,7 +15,6 @@
     --panel:#101827;
     --panel2:#151f30;
     --gold:#d9b45b;
-    --gold2:#f0d28b;
     --green:#00c087;
     --red:#f6465d;
     --text:#f3f5f8;
@@ -29,18 +28,17 @@ body {
     color:var(--text);
     font-family:Arial,sans-serif;
 }
-button,input,select {font:inherit}
+button,input {font:inherit}
 button {cursor:pointer}
 .hidden {display:none!important}
 
-/* LOGIN */
 #authScreen {
     min-height:100vh;
     display:flex;
     align-items:center;
     justify-content:center;
     padding:20px;
-    background:radial-gradient(circle at top,#1b2637 0%,#080c14 60%);
+    background:radial-gradient(circle at top,#1b2637,#080c14 60%);
 }
 .auth-card {
     width:100%;
@@ -65,10 +63,7 @@ button {cursor:pointer}
     letter-spacing:4px;
     margin:8px 0 28px;
 }
-.auth-card h2 {
-    text-align:center;
-    font-size:20px;
-}
+.auth-card h2 {text-align:center;font-size:20px}
 .field {margin:14px 0}
 .field label {
     display:block;
@@ -96,37 +91,24 @@ button {cursor:pointer}
     font-weight:bold;
     margin-top:12px;
 }
-.primary-btn:disabled {
-    opacity:.6;
-    cursor:wait;
-}
+.primary-btn:disabled {opacity:.6;cursor:wait}
 .switch-auth {
     text-align:center;
     margin-top:20px;
     color:var(--muted);
     font-size:13px;
 }
-.switch-auth span {
-    color:var(--gold);
-    cursor:pointer;
-}
+.switch-auth span {color:var(--gold);cursor:pointer}
 #authMessage {
     margin-top:12px;
     font-size:12px;
     text-align:center;
-    color:var(--gold2);
+    color:#f0d28b;
     line-height:1.5;
 }
 
-/* APPLICATION */
-#application {
-    display:none;
-    min-height:100vh;
-}
-.layout {
-    display:flex;
-    min-height:100vh;
-}
+#application {display:none;min-height:100vh}
+.layout {display:flex;min-height:100vh}
 .sidebar {
     width:235px;
     flex-shrink:0;
@@ -169,11 +151,7 @@ button {cursor:pointer}
     background:#1d293b;
     color:var(--gold);
 }
-.main {
-    min-width:0;
-    flex:1;
-    padding:22px;
-}
+.main {min-width:0;flex:1;padding:22px}
 .topbar {
     display:flex;
     justify-content:space-between;
@@ -181,23 +159,10 @@ button {cursor:pointer}
     gap:12px;
     margin-bottom:25px;
 }
-.topbar h2 {
-    font-size:19px;
-    margin:0;
-}
-.top-right {
-    display:flex;
-    gap:12px;
-    align-items:center;
-}
-.status {
-    color:var(--green);
-    font-size:11px;
-}
-.user-email {
-    color:var(--muted);
-    font-size:11px;
-}
+.topbar h2 {font-size:19px;margin:0}
+.top-right {display:flex;gap:12px;align-items:center}
+.status {color:var(--green);font-size:11px}
+.user-email {color:var(--muted);font-size:11px}
 .logout {
     background:#222e40;
     color:#ddd;
@@ -208,10 +173,7 @@ button {cursor:pointer}
 }
 .page {display:none}
 .page.active {display:block}
-.section-title {
-    font-size:17px;
-    margin:0 0 16px;
-}
+.section-title {font-size:17px;margin:0 0 16px}
 .stats {
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
@@ -225,10 +187,7 @@ button {cursor:pointer}
     border-radius:12px;
     min-width:0;
 }
-.stat-card small {
-    color:var(--muted);
-    font-size:11px;
-}
+.stat-card small {color:var(--muted);font-size:11px}
 .stat-card strong {
     display:block;
     margin-top:12px;
@@ -252,15 +211,8 @@ button {cursor:pointer}
     gap:10px;
     margin-bottom:15px;
 }
-.panel-head h3 {
-    margin:0;
-    font-size:14px;
-}
-.chart-toolbar {
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-}
+.panel-head h3 {margin:0;font-size:14px}
+.chart-toolbar {display:flex;flex-wrap:wrap;gap:6px}
 .tf-btn {
     background:#1a2638;
     border:1px solid var(--border);
@@ -317,6 +269,46 @@ button {cursor:pointer}
 }
 .data-row:last-child {border:0}
 .data-row span:first-child {color:var(--muted)}
+.notice {
+    padding:13px;
+    background:#172234;
+    color:var(--muted);
+    border-radius:8px;
+    font-size:11px;
+    line-height:1.6;
+}
+.signal-box {
+    text-align:center;
+    padding:20px 12px;
+    background:#080e19;
+    border:1px solid var(--border);
+    border-radius:10px;
+}
+.signal-value {
+    display:block;
+    font-size:29px;
+    font-weight:900;
+    color:var(--gold);
+}
+.signal-sub {
+    color:var(--muted);
+    font-size:10px;
+    margin-top:8px;
+}
+.signal-meter {
+    height:7px;
+    background:#263247;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:13px;
+}
+.signal-meter-fill {
+    height:100%;
+    width:0%;
+    background:var(--gold);
+    transition:width .3s;
+}
+.mtf-value {font-weight:bold}
 .feature-grid {
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -334,27 +326,13 @@ button {cursor:pointer}
     font-size:13px;
     margin-bottom:8px;
 }
-.feature small {
-    color:var(--muted);
-    font-size:11px;
-}
-.notice {
-    padding:13px;
-    background:#172234;
-    color:var(--muted);
-    border-radius:8px;
-    font-size:11px;
-    line-height:1.6;
-}
+.feature small {color:var(--muted);font-size:11px}
 .planner-grid {
     display:grid;
     grid-template-columns:repeat(2,1fr);
     gap:12px;
 }
-.planner-grid label {
-    color:var(--muted);
-    font-size:11px;
-}
+.planner-grid label {color:var(--muted);font-size:11px}
 .planner-grid input {
     display:block;
     width:100%;
@@ -381,8 +359,6 @@ button {cursor:pointer}
     padding:8px 12px;
     border-radius:7px;
 }
-
-/* MOBILE */
 @media(max-width:900px) {
     .sidebar {
         position:fixed;
@@ -413,13 +389,10 @@ button {cursor:pointer}
 
 <body>
 
-<!-- LOGIN / REGISTER -->
 <section id="authScreen">
 <div class="auth-card">
-
     <div class="logo">ADLI FX</div>
     <div class="logo-sub">INTEL INDICATOR</div>
-
     <h2 id="authTitle">Member Login</h2>
 
     <form id="authForm">
@@ -427,34 +400,28 @@ button {cursor:pointer}
             <label>Full Name</label>
             <input id="fullName" type="text" autocomplete="name">
         </div>
-
         <div class="field hidden" id="phoneField">
             <label>Phone Number</label>
             <input id="phone" type="tel" autocomplete="tel">
         </div>
-
         <div class="field">
             <label>Email Address</label>
             <input id="email" type="email" required autocomplete="email">
         </div>
-
         <div class="field">
             <label>Password</label>
             <input id="password" type="password" required minlength="6" autocomplete="current-password">
         </div>
-
         <button class="primary-btn" id="authSubmit" type="submit">LOGIN</button>
     </form>
 
     <div class="switch-auth">
         <span id="switchText">Create new account</span>
     </div>
-
     <div id="authMessage" role="status" aria-live="polite"></div>
 </div>
 </section>
 
-<!-- APPLICATION -->
 <section id="application">
 <div class="layout">
 
@@ -481,7 +448,6 @@ button {cursor:pointer}
         <button class="mobile-menu" id="menuButton">☰</button>
         <h2 id="pageTitle">Overview</h2>
     </div>
-
     <div class="top-right">
         <span class="status">● SYSTEM ONLINE</span>
         <span class="user-email" id="userEmail"></span>
@@ -489,7 +455,6 @@ button {cursor:pointer}
     </div>
 </header>
 
-<!-- OVERVIEW -->
 <section class="page active" id="overview">
 
     <div class="stats">
@@ -524,128 +489,109 @@ button {cursor:pointer}
                 <button class="tf-btn" data-tf="1d">D1</button>
             </div>
         </div>
-
         <div id="priceChart">
             <div class="chart-watermark">ADLI FX</div>
             <div class="chart-empty" id="chartEmpty">
-                Waiting for verified market data feed
+                Waiting for market data feed
             </div>
+        </div>
+    </div>
+
+    <div class="panel" id="aiSignalPanel">
+        <div class="panel-head">
+            <h3>ADLI AI SIGNAL</h3>
+            <span id="signalUpdated" style="color:var(--muted);font-size:10px">WAITING</span>
+        </div>
+        <div class="signal-box">
+            <strong id="aiSignal" class="signal-value">WAITING</strong>
+            <div class="signal-sub">TECHNICAL ANALYSIS — NOT A GUARANTEED PREDICTION</div>
+            <div class="signal-meter">
+                <div id="signalMeterFill" class="signal-meter-fill"></div>
+            </div>
+        </div>
+        <div class="data-row">
+            <span>Signal Strength</span>
+            <strong id="signalStrength">--</strong>
+        </div>
+        <div class="data-row">
+            <span>EMA Trend</span>
+            <strong id="signalEMA">--</strong>
+        </div>
+        <div class="data-row">
+            <span>RSI (14)</span>
+            <strong id="signalRSI">--</strong>
+        </div>
+        <div class="data-row">
+            <span>Analysis Timeframe</span>
+            <strong id="signalTF">--</strong>
         </div>
     </div>
 
     <div class="grid-two">
         <div class="panel">
             <h3 class="section-title">AI MARKET ANALYSIS</h3>
-            <div class="data-row">
-                <span>Market Structure</span>
-                <strong id="structure">--</strong>
-            </div>
-            <div class="data-row">
-                <span>Liquidity Sweep</span>
-                <strong id="liquidity">--</strong>
-            </div>
-            <div class="data-row">
-                <span>Fair Value Gap</span>
-                <strong id="fvg">--</strong>
-            </div>
-            <div class="data-row">
-                <span>Order Block</span>
-                <strong id="orderBlock">--</strong>
-            </div>
+            <div class="data-row"><span>Market Structure</span><strong id="structure">--</strong></div>
+            <div class="data-row"><span>Liquidity Sweep</span><strong id="liquidity">--</strong></div>
+            <div class="data-row"><span>Fair Value Gap</span><strong id="fvg">--</strong></div>
+            <div class="data-row"><span>Order Block</span><strong id="orderBlock">--</strong></div>
         </div>
 
         <div class="panel">
             <h3 class="section-title">TRADE LEVELS</h3>
-            <div class="data-row">
-                <span>Entry</span>
-                <strong id="entry">--</strong>
-            </div>
-            <div class="data-row">
-                <span>Stop Loss</span>
-                <strong id="stopLoss">--</strong>
-            </div>
-            <div class="data-row">
-                <span>Take Profit 1</span>
-                <strong id="tp1">--</strong>
-            </div>
-            <div class="data-row">
-                <span>Take Profit 2</span>
-                <strong id="tp2">--</strong>
-            </div>
-            <div class="data-row">
-                <span>Take Profit 3</span>
-                <strong id="tp3">--</strong>
-            </div>
+            <div class="data-row"><span>Entry</span><strong id="entry">--</strong></div>
+            <div class="data-row"><span>Stop Loss</span><strong id="stopLoss">--</strong></div>
+            <div class="data-row"><span>Take Profit 1</span><strong id="tp1">--</strong></div>
+            <div class="data-row"><span>Take Profit 2</span><strong id="tp2">--</strong></div>
+            <div class="data-row"><span>Take Profit 3</span><strong id="tp3">--</strong></div>
         </div>
     </div>
 
     <div class="notice">
-        ADLI FX INTEL INDICATOR is waiting for a verified market data
-        connection. No simulated prices or fabricated trading signals
-        are displayed.
+        ADLI FX uses technical indicators and third-party market data.
+        Signals are analytical estimates, not guaranteed predictions.
+        Provider prices may differ from broker prices.
     </div>
 </section>
 
-<!-- MARKET ANALYSIS -->
 <section class="page" id="analysis">
     <h3 class="section-title">SMART MONEY CONCEPTS</h3>
 
     <div class="feature-grid">
-        <div class="feature">
-            <strong>BOS</strong>
-            <small>Break of Structure</small>
-        </div>
-        <div class="feature">
-            <strong>CHoCH</strong>
-            <small>Change of Character</small>
-        </div>
-        <div class="feature">
-            <strong>FVG</strong>
-            <small>Fair Value Gap</small>
-        </div>
-        <div class="feature">
-            <strong>ORDER BLOCK</strong>
-            <small>Institutional price zone</small>
-        </div>
-        <div class="feature">
-            <strong>LIQUIDITY</strong>
-            <small>Liquidity sweep analysis</small>
-        </div>
-        <div class="feature">
-            <strong>PREMIUM / DISCOUNT</strong>
-            <small>Market range positioning</small>
-        </div>
+        <div class="feature"><strong>BOS</strong><small>Break of Structure</small></div>
+        <div class="feature"><strong>CHoCH</strong><small>Change of Character</small></div>
+        <div class="feature"><strong>FVG</strong><small>Fair Value Gap</small></div>
+        <div class="feature"><strong>ORDER BLOCK</strong><small>Price zone analysis</small></div>
+        <div class="feature"><strong>LIQUIDITY</strong><small>Liquidity analysis</small></div>
+        <div class="feature"><strong>PREMIUM / DISCOUNT</strong><small>Market range positioning</small></div>
     </div>
 
     <div class="panel" style="margin-top:16px">
-        <h3 class="section-title">MULTI TIMEFRAME ANALYSIS</h3>
-        <div class="data-row"><span>M1</span><strong>WAITING FOR DATA</strong></div>
-        <div class="data-row"><span>M5</span><strong>WAITING FOR DATA</strong></div>
-        <div class="data-row"><span>M15</span><strong>WAITING FOR DATA</strong></div>
-        <div class="data-row"><span>M30</span><strong>WAITING FOR DATA</strong></div>
-        <div class="data-row"><span>H1</span><strong>WAITING FOR DATA</strong></div>
-        <div class="data-row"><span>H4</span><strong>WAITING FOR DATA</strong></div>
-        <div class="data-row"><span>D1</span><strong>WAITING FOR DATA</strong></div>
+        <div class="panel-head">
+            <h3 class="section-title" style="margin:0">MULTI TIMEFRAME ANALYSIS</h3>
+            <span id="mtfUpdated" style="color:var(--muted);font-size:10px">WAITING</span>
+        </div>
+        <div class="data-row"><span>M1</span><strong class="mtf-value" id="mtf1m">WAITING</strong></div>
+        <div class="data-row"><span>M5</span><strong class="mtf-value" id="mtf5m">WAITING</strong></div>
+        <div class="data-row"><span>M15</span><strong class="mtf-value" id="mtf15m">WAITING</strong></div>
+        <div class="data-row"><span>M30</span><strong class="mtf-value" id="mtf30m">WAITING</strong></div>
+        <div class="data-row"><span>H1</span><strong class="mtf-value" id="mtf1h">WAITING</strong></div>
+        <div class="data-row"><span>H4</span><strong class="mtf-value" id="mtf4h">WAITING</strong></div>
+        <div class="data-row"><span>D1</span><strong class="mtf-value" id="mtf1d">WAITING</strong></div>
     </div>
 </section>
 
-<!-- SIGNAL HISTORY -->
 <section class="page" id="history">
     <div class="panel">
         <h3 class="section-title">SIGNAL HISTORY</h3>
-        <div class="notice">
-            No verified signal records available yet.
-            Signal history will appear here after the backend
-            signal service is connected.
+        <div class="notice" id="historyNotice">
+            No signal records available yet.
         </div>
     </div>
 </section>
 
-<!-- TRADE PLANNER -->
 <section class="page" id="planner">
     <div class="panel">
         <h3 class="section-title">RISK BUDGET CALCULATOR</h3>
-
         <div class="planner-grid">
             <div>
                 <label>Account Balance</label>
@@ -656,43 +602,23 @@ button {cursor:pointer}
                 <input type="number" id="risk" value="1" min="0" max="100" step="0.1">
             </div>
         </div>
-
-        <button class="primary-btn" id="calculateRisk">
-            CALCULATE RISK BUDGET
-        </button>
-
+        <button class="primary-btn" id="calculateRisk">CALCULATE RISK BUDGET</button>
         <div class="result" id="riskResult">
             Enter values to calculate a hypothetical risk budget.
         </div>
-
         <div class="notice" style="margin-top:15px">
             This tool calculates a hypothetical risk budget only.
-            It does not calculate broker-specific lot sizes or recommend trades.
         </div>
     </div>
 </section>
 
-<!-- SETTINGS -->
 <section class="page" id="settings">
     <div class="panel">
         <h3 class="section-title">ACCOUNT SETTINGS</h3>
-
-        <div class="data-row">
-            <span>Application</span>
-            <strong>ADLI FX INTEL INDICATOR</strong>
-        </div>
-        <div class="data-row">
-            <span>Market</span>
-            <strong>XAUUSD</strong>
-        </div>
-        <div class="data-row">
-            <span>Account</span>
-            <strong id="settingsEmail">--</strong>
-        </div>
-        <div class="data-row">
-            <span>Subscription</span>
-            <strong id="subscriptionStatus">CHECKING</strong>
-        </div>
+        <div class="data-row"><span>Application</span><strong>ADLI FX INTEL INDICATOR</strong></div>
+        <div class="data-row"><span>Market</span><strong>XAUUSD</strong></div>
+        <div class="data-row"><span>Account</span><strong id="settingsEmail">--</strong></div>
+        <div class="data-row"><span>Subscription</span><strong id="subscriptionStatus">CHECKING</strong></div>
         <div class="notice" id="subscriptionMessage" style="margin-top:14px">
             Subscription status has not been checked yet.
         </div>
@@ -703,7 +629,6 @@ button {cursor:pointer}
 </div>
 </section>
 
-<!-- PROJECT SCRIPTS -->
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="app.js"></script>
@@ -725,17 +650,13 @@ function message(text) {
 }
 
 function setSubscriptionStatus(status, detail, color) {
-    const statusElement = document.getElementById("subscriptionStatus");
-    const messageElement = document.getElementById("subscriptionMessage");
-
-    if (statusElement) {
-        statusElement.textContent = status;
-        statusElement.style.color = color || "var(--gold)";
+    const s = document.getElementById("subscriptionStatus");
+    const m = document.getElementById("subscriptionMessage");
+    if (s) {
+        s.textContent = status;
+        s.style.color = color || "var(--gold)";
     }
-
-    if (messageElement) {
-        messageElement.textContent = detail || "";
-    }
+    if (m) m.textContent = detail || "";
 }
 
 function showLogin() {
@@ -746,41 +667,32 @@ function showLogin() {
 function showApplication(user) {
     authScreen.style.display = "none";
     application.style.display = "block";
+    document.getElementById("userEmail").textContent = user.email || "";
+    document.getElementById("settingsEmail").textContent = user.email || "";
 
-    document.getElementById("userEmail").textContent =
-        user.email || "";
-
-    document.getElementById("settingsEmail").textContent =
-        user.email || "";
+    if (window.ADLI_APP && window.ADLI_APP.resizeChart) {
+        setTimeout(() => window.ADLI_APP.resizeChart(), 150);
+    }
 }
 
-/* LOGIN / REGISTER MODE */
 document.getElementById("switchText").addEventListener("click", () => {
     registerMode = !registerMode;
-
     document.getElementById("authTitle").textContent =
         registerMode ? "Create Account" : "Member Login";
-
     document.getElementById("authSubmit").textContent =
         registerMode ? "REGISTER" : "LOGIN";
-
     document.getElementById("nameField").classList.toggle("hidden", !registerMode);
     document.getElementById("phoneField").classList.toggle("hidden", !registerMode);
-
     document.getElementById("switchText").textContent =
         registerMode ? "Back to login" : "Create new account";
-
     document.getElementById("fullName").required = registerMode;
     document.getElementById("phone").required = registerMode;
-
     document.getElementById("password").autocomplete =
         registerMode ? "new-password" : "current-password";
-
     message("");
 });
 
-/* AUTH FORM */
-authForm.addEventListener("submit", async (event) => {
+authForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     if (!window.ADLI_AUTH) {
@@ -799,7 +711,6 @@ authForm.addEventListener("submit", async (event) => {
         if (registerMode) {
             const name = document.getElementById("fullName").value.trim();
             const phone = document.getElementById("phone").value.trim();
-
             const result = await window.ADLI_AUTH.register(
                 name, phone, email, password
             );
@@ -808,20 +719,15 @@ authForm.addEventListener("submit", async (event) => {
                 message("Registration successful. Checking account...");
                 await checkAccount(result.user);
             } else {
-                message(
-                    "Registration submitted. Check your email to confirm your account before logging in."
-                );
+                message("Registration submitted. Check your email to confirm your account.");
             }
         } else {
             const result = await window.ADLI_AUTH.login(email, password);
-
             if (!result || !result.user) {
                 throw new Error("Login succeeded but no user information was returned.");
             }
-
             await checkAccount(result.user);
         }
-
     } catch(error) {
         console.error("ADLI AUTH ERROR:", error);
         message(error.message || "Authentication failed.");
@@ -831,15 +737,9 @@ authForm.addEventListener("submit", async (event) => {
     }
 });
 
-/*
- * SUBSCRIPTION CHECK
- * TEST 1: Read the user's subscription row.
- * TEST 2: Verify access using Supabase RPC.
- */
 async function checkAccount(user) {
     if (checkingAccount) return;
     checkingAccount = true;
-
     showApplication(user);
 
     setSubscriptionStatus(
@@ -851,43 +751,30 @@ async function checkAccount(user) {
     try {
         if (!window.ADLI_AUTH ||
             typeof window.ADLI_AUTH.getSubscription !== "function") {
-            throw new Error("ADLI_AUTH.getSubscription() is unavailable. Check auth.js.");
+            throw new Error("ADLI_AUTH.getSubscription() is unavailable.");
         }
 
-        /* TEST 1 — SUBSCRIPTION TABLE */
         let subscription;
 
         try {
             subscription = await window.ADLI_AUTH.getSubscription();
         } catch(error) {
-            console.error("ADLI TEST 1 DATABASE ERROR:", error);
-
             setSubscriptionStatus(
                 "DATABASE ERROR",
-                "TEST 1 FAILED: " + (error.message || "Could not read subscriptions table."),
+                "Could not read subscription: " + error.message,
                 "var(--red)"
             );
-
-            alert(
-                "TEST 1 FAILED — DATABASE\n\n" +
-                (error.message || "Could not read subscription record.") +
-                "\n\nCheck the subscriptions table and its SELECT permission (RLS)."
-            );
+            alert("DATABASE ERROR\n\n" + error.message);
             return;
         }
 
         if (!subscription) {
             setSubscriptionStatus(
                 "NO RECORD",
-                "TEST 1 passed, but no subscription row was returned for this user.",
+                "No subscription record found for this user.",
                 "var(--red)"
             );
-
-            alert(
-                "TEST 1: DATABASE READ SUCCESSFUL\n\n" +
-                "No subscription record was found for this logged-in user.\n\n" +
-                "Check that subscriptions.user_id matches the user's Auth ID."
-            );
+            alert("No subscription record was found for this account.");
             return;
         }
 
@@ -895,29 +782,22 @@ async function checkAccount(user) {
 
         if (status !== "active") {
             setSubscriptionStatus(
-                status ? status.toUpperCase() : "PENDING",
-                "Subscription record found, but its status is not active.",
+                status.toUpperCase() || "PENDING",
+                "Subscription record found, but status is not active.",
                 "var(--gold)"
             );
-
-            alert(
-                "SUBSCRIPTION NOT ACTIVE\n\n" +
-                "Database record found.\n" +
-                "Current status: " + (subscription.status || "empty") +
-                "\n\nContact the administrator if this is unexpected."
-            );
+            alert("Subscription is not active.");
             return;
         }
 
-        /* TEST 2 — RPC ACCESS CHECK */
         setSubscriptionStatus(
             "RECORD ACTIVE",
-            "Database record is active. Verifying access permission...",
+            "Verifying access permission...",
             "var(--gold)"
         );
 
         if (typeof window.ADLI_AUTH.checkAccess !== "function") {
-            throw new Error("ADLI_AUTH.checkAccess() is unavailable. Check auth.js.");
+            throw new Error("ADLI_AUTH.checkAccess() is unavailable.");
         }
 
         let access;
@@ -925,71 +805,47 @@ async function checkAccount(user) {
         try {
             access = await window.ADLI_AUTH.checkAccess();
         } catch(error) {
-            console.error("ADLI TEST 2 RPC ERROR:", error);
-
             setSubscriptionStatus(
                 "RPC ERROR",
-                "TEST 2 FAILED: " + (error.message || "RPC verification failed."),
+                error.message,
                 "var(--red)"
             );
-
-            alert(
-                "TEST 1 PASSED — DATABASE RECORD FOUND AND ACTIVE.\n\n" +
-                "TEST 2 FAILED — RPC ACCESS CHECK\n\n" +
-                (error.message || "Could not verify access.") +
-                "\n\nCheck the has_active_subscription function and its permissions."
-            );
+            alert("RPC VERIFICATION ERROR\n\n" + error.message);
             return;
         }
 
         if (!access || access.active !== true) {
             setSubscriptionStatus(
                 "ACCESS FALSE",
-                "TEST 1 passed, but has_active_subscription returned false.",
+                "The subscription RPC returned false.",
                 "var(--red)"
             );
-
-            alert(
-                "TEST 1 PASSED — DATABASE RECORD FOUND AND ACTIVE.\n\n" +
-                "TEST 2 RESULT — ACCESS FALSE\n\n" +
-                "The RPC function returned false. Check its SQL logic and auth.uid()."
-            );
+            alert("Subscription access verification returned false.");
             return;
         }
 
-        /* BOTH TESTS PASSED */
         setSubscriptionStatus(
             "ACTIVE",
-            "Subscription verified successfully. Account access is active.",
+            "Subscription verified successfully.",
             "var(--green)"
         );
 
-        console.log("ADLI: Subscription and RPC checks passed.");
-
     } catch(error) {
-        console.error("ADLI SUBSCRIPTION CHECK ERROR:", error);
-
+        console.error("ADLI SUBSCRIPTION ERROR:", error);
         setSubscriptionStatus(
             "CHECK ERROR",
-            error.message || "Unexpected subscription verification error.",
+            error.message || "Unexpected error.",
             "var(--red)"
         );
-
-        alert(
-            "SUBSCRIPTION CHECK ERROR\n\n" +
-            (error.message || "Unexpected error. Check the browser console.")
-        );
+        alert(error.message || "Subscription check failed.");
     } finally {
         checkingAccount = false;
     }
 }
 
-/* LOGOUT */
 document.getElementById("logoutButton").addEventListener("click", async () => {
     try {
-        if (window.ADLI_AUTH) {
-            await window.ADLI_AUTH.logout();
-        }
+        if (window.ADLI_AUTH) await window.ADLI_AUTH.logout();
         showLogin();
     } catch(error) {
         console.error("ADLI LOGOUT ERROR:", error);
@@ -997,31 +853,23 @@ document.getElementById("logoutButton").addEventListener("click", async () => {
     }
 });
 
-/* NAVIGATION */
 document.querySelectorAll(".nav-btn").forEach(button => {
     button.addEventListener("click", () => {
         const page = button.dataset.page;
-        const targetPage = document.getElementById(page);
+        const target = document.getElementById(page);
+        if (!target) return;
 
-        if (!targetPage) {
-            console.error("ADLI: Page not found:", page);
-            return;
-        }
-
-        document.querySelectorAll(".nav-btn").forEach(item =>
-            item.classList.remove("active")
+        document.querySelectorAll(".nav-btn").forEach(x =>
+            x.classList.remove("active")
         );
-
-        document.querySelectorAll(".page").forEach(item =>
-            item.classList.remove("active")
+        document.querySelectorAll(".page").forEach(x =>
+            x.classList.remove("active")
         );
 
         button.classList.add("active");
-        targetPage.classList.add("active");
-
+        target.classList.add("active");
         document.getElementById("pageTitle").textContent =
             button.textContent.trim();
-
         document.getElementById("sidebar").classList.remove("open");
 
         if (window.ADLI_APP && window.ADLI_APP.resizeChart) {
@@ -1030,12 +878,10 @@ document.querySelectorAll(".nav-btn").forEach(button => {
     });
 });
 
-/* MOBILE MENU */
 document.getElementById("menuButton").addEventListener("click", () => {
     document.getElementById("sidebar").classList.toggle("open");
 });
 
-/* RISK BUDGET CALCULATOR */
 document.getElementById("calculateRisk").addEventListener("click", () => {
     const balance = Number(document.getElementById("balance").value);
     const risk = Number(document.getElementById("risk").value);
@@ -1043,37 +889,16 @@ document.getElementById("calculateRisk").addEventListener("click", () => {
 
     if (!Number.isFinite(balance) ||
         !Number.isFinite(risk) ||
-        balance <= 0 ||
-        risk < 0 ||
-        risk > 100) {
+        balance <= 0 || risk < 0 || risk > 100) {
         output.textContent = "Enter valid balance and risk percentage.";
         return;
     }
 
-    const amount = balance * risk / 100;
-
     output.textContent =
         "Hypothetical risk budget: " +
-        amount.toFixed(2) +
-        " (same currency as account balance)";
+        (balance * risk / 100).toFixed(2);
 });
 
-/* TIMEFRAME BUTTONS */
-document.querySelectorAll("[data-tf]").forEach(button => {
-    button.addEventListener("click", () => {
-        document.querySelectorAll("[data-tf]").forEach(item =>
-            item.classList.remove("active")
-        );
-
-        button.classList.add("active");
-
-        window.dispatchEvent(new CustomEvent("adli:timeframe-change", {
-            detail: { timeframe: button.dataset.tf }
-        }));
-    });
-});
-
-/* RESTORE EXISTING SESSION */
 async function restoreSession() {
     try {
         if (!window.ADLI_AUTH) {
@@ -1089,15 +914,13 @@ async function restoreSession() {
         } else {
             showLogin();
         }
-
     } catch(error) {
-        console.error("ADLI SESSION RESTORE ERROR:", error);
+        console.error("ADLI SESSION ERROR:", error);
         showLogin();
         message(error.message || "Could not restore login session.");
     }
 }
 
-/* START */
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", restoreSession);
 } else {
