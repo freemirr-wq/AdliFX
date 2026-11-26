@@ -1,7 +1,7 @@
 /* =====================================================
    ADLI FX INTEL INDICATOR
-   MARKET DATA ENGINE V1.0
-   Twelve Data + Supabase Edge Function
+   MARKET DATA ENGINE V1.1
+   Twelve Data + Supabase + Lightweight Charts
 ===================================================== */
 
 (function () {
@@ -14,13 +14,11 @@
         return;
     }
 
-    const SUPABASE_URL = CONFIG.SUPABASE_URL;
-    const SUPABASE_KEY = CONFIG.SUPABASE_KEY;
-
     const FUNCTION_URL =
-        SUPABASE_URL.replace(/\/$/, "") +
+        CONFIG.SUPABASE_URL.replace(/\/$/, "") +
         "/functions/v1/market-data";
 
+    const API_KEY = CONFIG.SUPABASE_KEY;
     const SYMBOL = "XAU/USD";
 
     const TIMEFRAMES = {
@@ -33,42 +31,120 @@
         "1d": "1day"
     };
 
-    const REFRESH_INTERVAL = 60000;
-
-    let currentTimeframe = "1m";
-    let marketData = [];
+    let currentTimeframe = "5m";
+    let candles = [];
+    let chart = null;
+    let candleSeries = null;
     let refreshTimer = null;
-    let isLoading = false;
+    let loading = false;
 
-    const MarketData = {
-
+    const Market = {
         status: "WAITING",
         price: null,
-        previousPrice: null,
         lastUpdated: null,
         error: null,
 
-        async fetch(timeframe = currentTimeframe) {
+        initChart() {
+            const container = document.getElementById("priceChart");
 
-            if (!CONFIG.MARKET_DATA_ENABLED) {
+            if (!container || !window.LightweightCharts) {
+                console.error("ADLI: Chart library unavailable.");
+                return;
+            }
+
+            chart = LightweightCharts.createChart(container, {
+                width: container.clientWidth,
+                height: container.clientHeight,
+
+                layout: {
+                    background: { color: "#101827" },
+                    textColor: "#8492a6"
+                },
+
+                grid: {
+                    vertLines: { color: "#1c293a" },
+                    horzLines: { color: "#1c293a" }
+                },
+
+                rightPriceScale: {
+                    borderColor: "#263247"
+                },
+
+                timeScale: {
+                    borderColor: "#263247",
+                    timeVisible: true,
+                    secondsVisible: false
+                },
+
+                crosshair: {
+                    mode: 1
+                }
+            });
+
+            candleSeries = chart.addCandlestickSeries({
+                upColor: "#00c087",
+                downColor: "#f6465d",
+                borderUpColor: "#00c087",
+                borderDownColor: "#f6465d",
+                wickUpColor: "#00c087",
+                wickDownColor: "#f6465d"
+            });
+
+            const resizeObserver = new ResizeObserver(() => {
+                if (chart && container.clientWidth > 0) {
+                    chart.applyOptions({
+                        width: container.clientWidth,
+                        height: container.clientHeight
+                    });
+                }
+            });
+
+            resizeObserver.observe(container);
+        },
+
+        convertCandles(values) {
+            return values
+                .map(item => {
+                    const time = Math.floor(
+                        new Date(item.datetime.replace(" ", "T") + "Z").getTime() / 1000
+                    );
+
+                    return {
+                        time: time,
+                        open: Number(item.open),
+                        high: Number(item.high),
+                        low: Number(item.low),
+                        close: Number(item.close)
+                    };
+                })
+                .filter(item =>
+                    Number.isFinite(item.time) &&
+                    Number.isFinite(item.open) &&
+                    Number.isFinite(item.high) &&
+                    Number.isFinite(item.low) &&
+                    Number.isFinite(item.close)
+                )
+                .sort((a, b) => a.time - b.time);
+        },
+
+        async fetch(timeframe = currentTimeframe) {
+            if (loading) return;
+
+            if (CONFIG.MARKET_DATA_ENABLED !== true) {
                 this.status = "DISABLED";
                 this.updateUI();
                 return;
             }
 
-            if (isLoading) return;
-
-            isLoading = true;
+            loading = true;
             this.status = "LOADING";
-            this.error = null;
             this.updateUI();
 
             try {
-
                 const interval = TIMEFRAMES[timeframe];
 
                 if (!interval) {
-                    throw new Error("Unsupported timeframe");
+                    throw new Error("Invalid timeframe.");
                 }
 
                 const params = new URLSearchParams({
@@ -81,8 +157,8 @@
                     {
                         method: "GET",
                         headers: {
-                            "apikey": SUPABASE_KEY,
-                            "Authorization": "Bearer " + SUPABASE_KEY
+                            "apikey": API_KEY,
+                            "Authorization": "Bearer " + API_KEY
                         }
                     }
                 );
@@ -91,105 +167,107 @@
 
                 if (!response.ok || result.success !== true) {
                     throw new Error(
-                        result.error || "Market data request failed"
+                        result.error || "Market data request failed."
                     );
                 }
 
                 if (!Array.isArray(result.values) ||
                     result.values.length === 0) {
-                    throw new Error("No market data returned");
+                    throw new Error("No candle data received.");
                 }
 
-                marketData = result.values;
+                const converted = this.convertCandles(result.values);
 
-                const latest = marketData[0];
-                const price = Number(latest.close);
-
-                if (!Number.isFinite(price)) {
-                    throw new Error("Invalid market price");
+                if (converted.length === 0) {
+                    throw new Error("Candle data format is invalid.");
                 }
 
-                this.previousPrice = this.price;
-                this.price = price;
+                candles = converted;
+
+                this.price = candles[candles.length - 1].close;
                 this.lastUpdated = new Date();
                 this.status = "CONNECTED";
                 this.error = null;
 
                 currentTimeframe = timeframe;
 
+                if (candleSeries) {
+                    candleSeries.setData(candles);
+                    chart.timeScale().fitContent();
+                }
+
                 console.log("ADLI MARKET DATA:", {
                     symbol: result.symbol,
-                    timeframe: timeframe,
-                    price: price,
-                    latest: latest
+                    timeframe,
+                    price: this.price,
+                    candleCount: candles.length
                 });
 
             } catch (error) {
-
                 this.status = "ERROR";
                 this.error = error.message;
 
-                console.error(
-                    "ADLI MARKET DATA ERROR:",
-                    error
-                );
+                console.error("ADLI MARKET ERROR:", error);
 
             } finally {
-
-                isLoading = false;
+                loading = false;
                 this.updateUI();
-
             }
         },
 
         updateUI() {
+            const priceElement =
+                document.getElementById("goldPrice");
 
-            const priceElements = [
-                "#marketPrice",
-                "#currentPrice",
-                "#xauPrice",
-                "[data-market-price]"
-            ];
+            const statusElement =
+                document.getElementById("dataStatus");
 
-            priceElements.forEach(selector => {
-                document.querySelectorAll(selector).forEach(element => {
-                    if (this.price !== null) {
-                        element.textContent =
-                            this.price.toFixed(2);
-                    }
-                });
-            });
+            const emptyElement =
+                document.getElementById("chartEmpty");
 
-            const statusElements = [
-                "#marketStatus",
-                "#dataStatus",
-                "[data-market-status]"
-            ];
+            const trendElement =
+                document.getElementById("marketTrend");
 
-            statusElements.forEach(selector => {
-                document.querySelectorAll(selector).forEach(element => {
-                    element.textContent = this.status;
-                });
-            });
-
-            const updateElements = [
-                "#lastUpdated",
-                "[data-last-updated]"
-            ];
-
-            updateElements.forEach(selector => {
-                document.querySelectorAll(selector).forEach(element => {
-                    element.textContent = this.lastUpdated
-                        ? this.lastUpdated.toLocaleTimeString()
+            if (priceElement) {
+                priceElement.textContent =
+                    this.price !== null
+                        ? this.price.toFixed(2)
                         : "--";
-                });
-            });
+            }
 
-            const errorElement =
-                document.querySelector("#marketError");
+            if (statusElement) {
+                statusElement.textContent = this.status;
 
-            if (errorElement) {
-                errorElement.textContent = this.error || "";
+                statusElement.style.color =
+                    this.status === "CONNECTED"
+                        ? "#00c087"
+                        : "#f6465d";
+            }
+
+            if (emptyElement) {
+                if (this.status === "CONNECTED") {
+                    emptyElement.style.display = "none";
+                } else {
+                    emptyElement.style.display = "flex";
+                    emptyElement.textContent =
+                        this.error || "Waiting for market data...";
+                }
+            }
+
+            if (trendElement && candles.length >= 2) {
+                const latest = candles[candles.length - 1];
+                const previous = candles[candles.length - 2];
+
+                if (latest.close > previous.close) {
+                    trendElement.textContent = "UP";
+                    trendElement.style.color = "#00c087";
+                } else if (latest.close < previous.close) {
+                    trendElement.textContent = "DOWN";
+                    trendElement.style.color = "#f6465d";
+                } else {
+                    trendElement.textContent = "FLAT";
+                    trendElement.style.color = "#d9b45b";
+                }
             }
 
             window.dispatchEvent(
@@ -198,7 +276,7 @@
                         status: this.status,
                         symbol: SYMBOL,
                         price: this.price,
-                        candles: marketData,
+                        candles: candles,
                         timeframe: currentTimeframe,
                         updatedAt: this.lastUpdated,
                         error: this.error
@@ -207,31 +285,26 @@
             );
         },
 
-        start() {
-
-            this.fetch(currentTimeframe);
-
-            if (refreshTimer) {
-                clearInterval(refreshTimer);
-            }
-
-            refreshTimer = setInterval(() => {
-                this.fetch(currentTimeframe);
-            }, REFRESH_INTERVAL);
-
-        },
-
         setTimeframe(timeframe) {
-
             if (!TIMEFRAMES[timeframe]) return;
 
             currentTimeframe = timeframe;
             this.fetch(timeframe);
+        },
 
+        resizeChart() {
+            const container = document.getElementById("priceChart");
+
+            if (chart && container) {
+                chart.applyOptions({
+                    width: container.clientWidth,
+                    height: container.clientHeight
+                });
+            }
         },
 
         getCandles() {
-            return marketData;
+            return candles;
         },
 
         getPrice() {
@@ -243,27 +316,46 @@
         }
     };
 
-    window.ADLI_MARKET = MarketData;
+    window.ADLI_MARKET = Market;
 
-    document.addEventListener("DOMContentLoaded", () => {
+    /* INITIALIZE */
+    function start() {
+        Market.initChart();
 
-        document.querySelectorAll("[data-timeframe]").forEach(button => {
-
+        document.querySelectorAll("[data-tf]").forEach(button => {
             button.addEventListener("click", () => {
+                document.querySelectorAll("[data-tf]").forEach(item =>
+                    item.classList.remove("active")
+                );
 
-                const timeframe =
-                    button.getAttribute("data-timeframe");
-
-                MarketData.setTimeframe(timeframe);
-
+                button.classList.add("active");
+                Market.setTimeframe(button.dataset.tf);
             });
-
         });
 
-        MarketData.start();
+        window.addEventListener("adli:timeframe-change", event => {
+            if (event.detail && event.detail.timeframe) {
+                Market.setTimeframe(event.detail.timeframe);
+            }
+        });
 
-    });
+        Market.fetch(currentTimeframe);
 
-    console.log("ADLI Market Data Engine initialized.");
+        refreshTimer = setInterval(() => {
+            Market.fetch(currentTimeframe);
+        }, 60000);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start);
+    } else {
+        start();
+    }
+
+    window.ADLI_APP = {
+        resizeChart: () => Market.resizeChart()
+    };
+
+    console.log("ADLI Market Engine V1.1 initialized.");
 
 })();
