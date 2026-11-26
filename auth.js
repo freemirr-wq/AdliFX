@@ -1,6 +1,6 @@
 /* =====================================================
    ADLI FX INTEL INDICATOR
-   AUTHENTICATION SYSTEM V1.0
+   AUTHENTICATION SYSTEM V1.1
 ===================================================== */
 
 (function () {
@@ -10,11 +10,13 @@
 
     if (!config || !config.SUPABASE_URL || !config.SUPABASE_KEY) {
         console.error("ADLI: Supabase configuration missing.");
+        alert("Supabase configuration missing. Check Config.js.");
         return;
     }
 
     if (!window.supabase) {
         console.error("ADLI: Supabase library not loaded.");
+        alert("Supabase library not loaded.");
         return;
     }
 
@@ -25,11 +27,10 @@
 
     const Auth = {
 
-        // REGISTER NEW MEMBER
         async register(name, phone, email, password) {
             const { data, error } = await client.auth.signUp({
                 email: email.trim(),
-                password: password,
+                password,
                 options: {
                     data: {
                         full_name: name.trim(),
@@ -39,105 +40,83 @@
             });
 
             if (error) throw error;
-
             return data;
         },
 
-        // LOGIN
         async login(email, password) {
             const { data, error } = await client.auth.signInWithPassword({
                 email: email.trim(),
-                password: password
+                password
             });
 
             if (error) throw error;
-
             return data;
         },
 
-        // LOGOUT
         async logout() {
             const { error } = await client.auth.signOut();
-
             if (error) throw error;
-
             return true;
         },
 
-        // GET CURRENT USER
         async getUser() {
             const { data, error } = await client.auth.getUser();
-
             if (error) throw error;
-
             return data.user;
         },
 
-        // GET CURRENT SESSION
         async getSession() {
             const { data, error } = await client.auth.getSession();
-
             if (error) throw error;
-
             return data.session;
         },
 
-        // GET SUBSCRIPTION
         async getSubscription() {
             const user = await this.getUser();
-
             if (!user) return null;
 
             const { data, error } = await client
                 .from("subscriptions")
-                .select("status, plan, starts_at, expires_at, created_at")
+                .select("status, plan_name, start_at, expires_at, created_at")
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
             if (error) throw error;
-
             return data;
         },
 
-        // CHECK ACTIVE ACCESS
-       alert("CHECK ACCESS STARTED");
         async checkAccess() {
-    consasync checkAccess() {
-    const user = await this.getUser();
+            const user = await this.getUser();
 
-    if (!user) {
-        return {
-            loggedIn: false,
-            active: false
-        };
-    }
+            if (!user) {
+                return {
+                    loggedIn: false,
+                    active: false
+                };
+            }
 
-    const { data, error } = await client.rpc(
-        "has_active_subscription"
-    );
+            const { data, error } = await client.rpc(
+                "has_active_subscription"
+            );
 
-    if (error) {
-        alert(
-            "ADLI RPC ERROR\n" +
-            "Code: " + (error.code || "N/A") + "\n" +
-            "Message: " + (error.message || "N/A") + "\n" +
-            "Details: " + (error.details || "N/A") + "\n" +
-            "Hint: " + (error.hint || "N/A")
-        );
+            if (error) {
+                console.error("ADLI RPC ERROR:", error);
+                alert(
+                    "Subscription error: " +
+                    (error.message || "Unknown error")
+                );
+                throw error;
+            }
 
-        throw error;
-    }
+            return {
+                loggedIn: true,
+                active: data === true,
+                user: user
+            };
+        },
 
-    return {
-        loggedIn: true,
-        active: data === true,
-        user: user
-    };
-},
-
-        // LISTEN TO AUTH CHANGES
         onAuthChange(callback) {
             return client.auth.onAuthStateChange(
                 (event, session) => {
@@ -147,7 +126,6 @@
                 }
             );
         }
-
     };
 
     window.ADLI_AUTH = Auth;
