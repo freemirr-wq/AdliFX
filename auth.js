@@ -103,6 +103,7 @@
 
         // CHECK ACTIVE ACCESS
         async checkAccess() {
+    consasync checkAccess() {
     const user = await this.getUser();
 
     if (!user) {
@@ -116,14 +117,15 @@
         "has_active_subscription"
     );
 
-    console.log("ADLI SUBSCRIPTION CHECK:", {
-        data,
-        error,
-        userId: user.id
-    });
-
     if (error) {
-        console.error("SUBSCRIPTION RPC ERROR:", error);
+        alert(
+            "ADLI RPC ERROR\n" +
+            "Code: " + (error.code || "N/A") + "\n" +
+            "Message: " + (error.message || "N/A") + "\n" +
+            "Details: " + (error.details || "N/A") + "\n" +
+            "Hint: " + (error.hint || "N/A")
+        );
+
         throw error;
     }
 
