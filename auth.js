@@ -1,6 +1,6 @@
 /* =====================================================
    ADLI FX INTEL INDICATOR
-   AUTHENTICATION SYSTEM V1.1
+   AUTHENTICATION SYSTEM V1.2
 ===================================================== */
 
 (function () {
@@ -77,7 +77,7 @@
 
             const { data, error } = await client
                 .from("subscriptions")
-                .select("status, plan_name, start_at, expires_at, created_at")
+                .select("status, plan_name, starts_at, expires_at, created_at")
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false })
                 .limit(1)
