@@ -102,6 +102,7 @@
         },
 
         // CHECK ACTIVE ACCESS
+       alert("CHECK ACCESS STARTED");
         async checkAccess() {
     consasync checkAccess() {
     const user = await this.getUser();
