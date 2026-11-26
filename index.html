@@ -1,737 +1,206 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080c14">
-<title>ADLI FX INTEL | Premium Market Lab</title>
-
+<title>ADLI FX INTEL | Premium Market Terminal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-
 <style>
-:root{
---bg:#070b13;--panel:#101827;--panel2:#151f30;
---gold:#d9b45b;--green:#00c087;--red:#f6465d;
---text:#f3f5f8;--muted:#8492a6;--border:#263247
-}
+:root{--bg:#070b13;--panel:#101827;--panel2:#151f30;--gold:#d9b45b;--gold2:#f0d28b;--green:#00c087;--red:#f6465d;--text:#f3f5f8;--muted:#8492a6;--border:#263247}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(ellipse at 70% -20%,#1b2b43 0,transparent 45%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.hidden{display:none!important}
-#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at top,#1b2637,#080c14 60%)}
+body{margin:0;background:radial-gradient(ellipse at 70% -20%,#1b2b43 0,transparent 45%),var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at top,#1b2637,#080c14 65%)}
 .auth-card{width:100%;max-width:420px;padding:30px;background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 60px #0008}
-.logo{text-align:center;color:var(--gold);font-size:25px;font-weight:900;letter-spacing:2px}
-.logo-sub{text-align:center;color:var(--muted);font-size:11px;letter-spacing:4px;margin:8px 0 28px}
-.auth-card h2{text-align:center;font-size:20px}
-.field{margin:14px 0}
-.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}
-.field input{width:100%;padding:13px;color:white;background:#080e19;border:1px solid var(--border);border-radius:9px;outline:none}
-.field input:focus{border-color:var(--gold)}
-.primary-btn{padding:12px 15px;border:0;border-radius:9px;background:var(--gold);color:#111;font-weight:bold;margin-top:10px}
-.auth-card .primary-btn{width:100%;padding:14px}
-.primary-btn:disabled{opacity:.6}
-.switch-auth{text-align:center;margin-top:20px;color:var(--muted);font-size:13px}
-.switch-auth span{color:var(--gold);cursor:pointer}
-#authMessage{margin-top:12px;font-size:12px;text-align:center;color:#f0d28b;line-height:1.5;overflow-wrap:anywhere}
-#application{display:none;min-height:100vh}
-.layout{display:flex;min-height:100vh}
-.sidebar{width:235px;flex-shrink:0;background:#0c1320;border-right:1px solid var(--border);padding:22px 15px}
-.brand{padding:5px 10px 28px}
-.brand strong{color:var(--gold);font-size:19px;letter-spacing:1px}
-.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:3px;margin-top:6px}
-.nav-label{color:#64748b;font-size:10px;letter-spacing:2px;padding:15px 10px 8px}
-.nav-btn{display:block;width:100%;padding:12px;margin:4px 0;text-align:left;border:0;border-radius:8px;background:transparent;color:#aab5c5;font-size:13px}
-.nav-btn.active,.nav-btn:hover{background:#1d293b;color:var(--gold)}
-.main{min-width:0;flex:1;padding:22px;max-width:1800px;margin:auto;width:100%}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}
-.topbar h2{font-size:19px;margin:0}
-.top-right{display:flex;gap:12px;align-items:center}
-.status{color:var(--green);font-size:11px}
-.user-email{color:var(--muted);font-size:11px}
-.logout,.secondary-btn{background:#222e40;color:#ddd;border:1px solid var(--border);padding:9px 12px;border-radius:7px;font-size:11px}
-.page{display:none}
-.page.active{display:block}
-.section-title{font-size:17px;margin:0 0 16px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:15px}
-.stat-card,.panel{background:linear-gradient(145deg,#111b2b,#0e1725);border:1px solid var(--border);border-radius:12px}
-.stat-card{padding:17px;min-width:0}
-.stat-card small{color:var(--muted);font-size:11px}
-.stat-card strong{display:block;margin-top:12px;font-size:19px;overflow-wrap:anywhere}
-.gold{color:var(--gold)}.green{color:var(--green)}.red{color:var(--red)}
-.panel{padding:17px;margin-bottom:15px;position:relative;overflow:hidden}
-.panel:after{content:"ADLI FX";position:absolute;right:16px;bottom:4px;font-size:40px;font-weight:900;letter-spacing:5px;color:#d9b45b08;pointer-events:none}
-.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.panel-head h3{margin:0;font-size:14px}
-.toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.tf-btn,.mode-btn{background:#1a2638;border:1px solid var(--border);color:#aab5c5;border-radius:6px;padding:7px 10px;font-size:11px}
-.tf-btn.active,.mode-btn.active{color:#111;background:var(--gold);border-color:var(--gold)}
-#priceChart{width:100%;height:340px;position:relative}
-.chart-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:12px;pointer-events:none}
-.chart-watermark{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);color:#d9b45b18;font-size:30px;font-weight:900;letter-spacing:5px;pointer-events:none;white-space:nowrap}
-.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.data-row{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:12px}
-.data-row:last-child{border:0}
-.data-row span:first-child{color:var(--muted)}
-.notice{padding:13px;background:#172234;color:var(--muted);border-radius:8px;font-size:11px;line-height:1.6}
-.signal-box{text-align:center;padding:18px 12px;background:#080e19;border:1px solid var(--border);border-radius:10px}
-.signal-value{display:block;font-size:28px;font-weight:900;color:var(--gold)}
-.signal-sub{color:var(--muted);font-size:10px;margin-top:8px}
-.signal-meter{height:7px;background:#263247;border-radius:20px;overflow:hidden;margin-top:13px}
-.signal-meter-fill{height:100%;width:0%;background:var(--gold);transition:width .3s}
-.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.feature{background:var(--panel2);padding:15px;border-radius:9px;border:1px solid var(--border)}
-.feature strong{display:block;color:var(--gold);font-size:13px;margin-bottom:8px}
-.feature small{color:var(--muted);font-size:11px}
-.modebar{display:flex;gap:7px;flex-wrap:wrap}
-.pill{border:1px solid var(--border);border-radius:20px;padding:6px 10px;color:var(--muted);font-size:10px}
-.pill.good{color:var(--green);border-color:#00c08755}
-.pill.warn{color:var(--gold);border-color:#d9b45b55}
-.planner-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.planner-grid label{color:var(--muted);font-size:11px}
-.planner-grid input,.planner-grid select{display:block;width:100%;margin-top:7px;padding:12px;color:white;background:#080e19;border:1px solid var(--border);border-radius:8px}
-.result{margin-top:15px;padding:15px;background:#172234;border-radius:8px;color:var(--gold);font-size:13px}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:11px;min-width:580px}
-th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--border)}
-th{color:var(--muted);font-weight:600}
-.empty{text-align:center;color:var(--muted);padding:22px}
-.news-link{color:var(--gold);text-decoration:none}
+.logo{text-align:center;color:var(--gold);font-size:27px;font-weight:900;letter-spacing:3px}.logo-sub{text-align:center;color:var(--muted);font-size:10px;letter-spacing:4px;margin:8px 0 28px}
+.auth-card h2{text-align:center;font-size:20px}.field{margin:14px 0}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}.field input{width:100%;padding:13px;color:white;background:#080e19;border:1px solid var(--border);border-radius:9px;outline:none}.field input:focus{border-color:var(--gold)}
+.primary-btn{padding:12px 15px;border:0;border-radius:9px;background:linear-gradient(120deg,var(--gold),var(--gold2));color:#111;font-weight:bold;margin-top:10px}.auth-card .primary-btn{width:100%;padding:14px}.primary-btn:disabled{opacity:.6}
+.switch-auth{text-align:center;margin-top:20px;color:var(--muted);font-size:13px}.switch-auth span{color:var(--gold);cursor:pointer}#authMessage{margin-top:12px;font-size:12px;text-align:center;color:var(--gold2);line-height:1.5;overflow-wrap:anywhere}
+#application{display:none;min-height:100vh}.layout{display:flex;min-height:100vh}
+.sidebar{width:238px;flex-shrink:0;background:#0b1220;border-right:1px solid var(--border);padding:22px 15px;position:relative;z-index:20}
+.brand{padding:5px 10px 28px}.brand-mark{display:flex;align-items:center;gap:10px}.brand-icon{width:36px;height:36px;border:1px solid var(--gold);border-radius:10px;display:grid;place-items:center;color:var(--gold);font-weight:900;font-size:20px;box-shadow:0 0 20px #d9b45b22}.brand strong{color:var(--gold);font-size:19px;letter-spacing:1px}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:3px;margin-top:6px}
+.nav-label{color:#64748b;font-size:10px;letter-spacing:2px;padding:15px 10px 8px}.nav-btn{display:block;width:100%;padding:12px;margin:4px 0;text-align:left;border:1px solid transparent;border-radius:8px;background:transparent;color:#aab5c5;font-size:13px}.nav-btn.active,.nav-btn:hover{background:#1d293b;color:var(--gold);border-color:#d9b45b33}
+.main{min-width:0;flex:1;padding:22px;max-width:1800px;margin:auto;width:100%}.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}.topbar h2{font-size:19px;margin:0}.top-right{display:flex;gap:12px;align-items:center}.status{color:var(--green);font-size:10px;white-space:nowrap}.user-email{color:var(--muted);font-size:11px}.logout,.secondary-btn,.lang-btn{background:#222e40;color:#ddd;border:1px solid var(--border);padding:9px 12px;border-radius:7px;font-size:11px}.lang-btn{color:var(--gold)}
+.page{display:none}.page.active{display:block}.section-title{font-size:16px;margin:0 0 16px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:15px}.stat-card,.panel{background:linear-gradient(145deg,#111b2b,#0e1725);border:1px solid var(--border);border-radius:12px}.stat-card{padding:17px;min-width:0;position:relative;overflow:hidden}.stat-card:after{content:"";position:absolute;width:90px;height:90px;border:1px solid #d9b45b14;border-radius:50%;right:-35px;bottom:-45px}.stat-card small{color:var(--muted);font-size:10px;letter-spacing:1px}.stat-card strong{display:block;margin-top:12px;font-size:20px;overflow-wrap:anywhere}.gold{color:var(--gold)}.green{color:var(--green)}.red{color:var(--red)}
+.panel{padding:17px;margin-bottom:15px;position:relative;overflow:hidden}.panel:after{content:"ADLI FX";position:absolute;right:16px;bottom:4px;font-size:42px;font-weight:900;letter-spacing:5px;color:#d9b45b08;pointer-events:none}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}.panel-head h3{margin:0;font-size:13px;letter-spacing:.5px}.toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.tf-btn,.mode-btn{background:#1a2638;border:1px solid var(--border);color:#aab5c5;border-radius:6px;padding:7px 10px;font-size:10px}.tf-btn.active,.mode-btn.active{color:#111;background:var(--gold);border-color:var(--gold)}
+#priceChart{width:100%;height:350px;position:relative}.chart-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:12px;pointer-events:none}.chart-watermark{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);color:#d9b45b18;font-size:35px;font-weight:900;letter-spacing:7px;pointer-events:none;white-space:nowrap}
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:15px}.data-row{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center}.data-row:last-child{border:0}.data-row span:first-child{color:var(--muted)}.data-row strong{text-align:right;overflow-wrap:anywhere}
+.notice{padding:13px;background:#172234;color:var(--muted);border-radius:8px;font-size:11px;line-height:1.6}.signal-box{text-align:center;padding:18px 12px;background:#080e19;border:1px solid var(--border);border-radius:10px}.signal-value{display:block;font-size:30px;font-weight:900;color:var(--gold);letter-spacing:2px}.signal-sub{color:var(--muted);font-size:9px;margin-top:8px}.signal-meter{height:7px;background:#263247;border-radius:20px;overflow:hidden;margin-top:13px}.signal-meter-fill{height:100%;width:0%;background:var(--gold);transition:width .3s}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.feature{background:var(--panel2);padding:15px;border-radius:9px;border:1px solid var(--border);min-width:0}.feature strong{display:block;color:var(--gold);font-size:12px;margin-bottom:8px}.feature small{color:var(--muted);font-size:11px;overflow-wrap:anywhere}
+.modebar{display:flex;gap:7px;flex-wrap:wrap}.pill{border:1px solid var(--border);border-radius:20px;padding:6px 10px;color:var(--muted);font-size:10px}.pill.good{color:var(--green);border-color:#00c08755}.pill.warn{color:var(--gold);border-color:#d9b45b55}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:11px;min-width:580px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--border)}th{color:var(--muted);font-weight:600}.empty{text-align:center;color:var(--muted);padding:22px}
+.calendar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.calendar-stat{background:#0a1220;border:1px solid var(--border);padding:13px;border-radius:9px}.calendar-stat small{color:var(--muted);font-size:10px}.calendar-stat strong{display:block;margin-top:8px;font-size:13px;color:var(--gold)}.calendar-table{min-width:680px}.calendar-state{padding:20px;text-align:center;border:1px dashed #45536a;border-radius:9px;color:var(--muted);font-size:12px;line-height:1.7}
+.planner-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.planner-grid label{color:var(--muted);font-size:11px}.planner-grid input{display:block;width:100%;margin-top:7px;padding:12px;color:white;background:#080e19;border:1px solid var(--border);border-radius:8px}.result{margin-top:15px;padding:15px;background:#172234;border-radius:8px;color:var(--gold);font-size:13px}
 .mobile-menu{display:none;background:#1a2638;color:white;border:1px solid var(--border);padding:8px 12px;border-radius:7px}
-@media(max-width:900px){
-.sidebar{position:fixed;z-index:20;left:-250px;top:0;bottom:0;transition:.25s}
-.sidebar.open{left:0}
-.mobile-menu{display:block}
-.main{padding:15px}
-.stats{grid-template-columns:repeat(2,1fr)}
-.grid-two{grid-template-columns:1fr}
-.feature-grid{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:480px){
-.topbar h2{font-size:15px}
-.user-email{display:none}
-.stat-card{padding:13px}
-.stat-card strong{font-size:16px}
-#priceChart{height:280px}
-.auth-card{padding:23px}
-.feature-grid{grid-template-columns:1fr 1fr}
-.main{padding:11px}
-}
+@media(max-width:900px){.sidebar{position:fixed;z-index:20;left:-250px;top:0;bottom:0;transition:.25s}.sidebar.open{left:0}.mobile-menu{display:block}.main{padding:15px}.stats{grid-template-columns:repeat(2,1fr)}.grid-two{grid-template-columns:1fr}.feature-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.topbar h2{font-size:14px}.user-email{display:none}.stat-card{padding:13px}.stat-card strong{font-size:16px}#priceChart{height:285px}.auth-card{padding:23px}.feature-grid{grid-template-columns:1fr 1fr}.main{padding:10px}.panel{padding:13px}.calendar-grid{grid-template-columns:repeat(2,1fr)}.status{display:none}.signal-value{font-size:25px}}
 </style>
 </head>
-
 <body>
-
 <section id="authScreen">
-<div class="auth-card">
-<div class="logo">ADLI FX</div>
-<div class="logo-sub">INTEL INDICATOR</div>
-<h2 id="authTitle">Member Login</h2>
-
-<form id="authForm">
-<div class="field hidden" id="nameField">
-<label>Full Name</label>
-<input id="fullName" type="text" autocomplete="name">
-</div>
-
-<div class="field hidden" id="phoneField">
-<label>Phone Number</label>
-<input id="phone" type="tel" autocomplete="tel">
-</div>
-
-<div class="field">
-<label>Email Address</label>
-<input id="email" type="email" required autocomplete="email">
-</div>
-
-<div class="field">
-<label>Password</label>
-<input id="password" type="password" required minlength="6" autocomplete="current-password">
-</div>
-
-<button class="primary-btn" id="authSubmit" type="submit">LOGIN</button>
-</form>
-
-<div class="switch-auth">
-<span id="switchText">Create new account</span>
-</div>
-<div id="authMessage" role="status" aria-live="polite"></div>
-</div>
+ <div class="auth-card">
+  <div class="logo">ADLI FX</div><div class="logo-sub">INTEL INDICATOR</div>
+  <h2 id="authTitle">Log Masuk Ahli</h2>
+  <form id="authForm">
+   <div class="field hidden" id="nameField"><label>Nama penuh</label><input id="fullName" type="text" autocomplete="name"></div>
+   <div class="field hidden" id="phoneField"><label>Nombor telefon</label><input id="phone" type="tel" autocomplete="tel"></div>
+   <div class="field"><label>Email</label><input id="email" type="email" required autocomplete="email"></div>
+   <div class="field"><label>Kata laluan</label><input id="password" type="password" required minlength="6" autocomplete="current-password"></div>
+   <button class="primary-btn" id="authSubmit" type="submit">LOG MASUK</button>
+  </form>
+  <div class="switch-auth"><span id="switchText">Daftar akaun baharu</span></div>
+  <div id="authMessage" role="status" aria-live="polite"></div>
+ </div>
 </section>
 
 <section id="application">
 <div class="layout">
-
 <aside class="sidebar" id="sidebar">
-<div class="brand">
-<strong>ADLI FX</strong>
-<small>INTEL INDICATOR</small>
-</div>
-
-<div class="nav-label">MAIN MENU</div>
-<button class="nav-btn active" data-page="overview">◈ Overview</button>
-<button class="nav-btn" data-page="analysis">⌁ Market Analysis</button>
-<button class="nav-btn" data-page="news">▣ News & Sessions</button>
-<button class="nav-btn" data-page="history">▤ Signal History</button>
-<button class="nav-btn" data-page="planner">◉ Trade Planner</button>
-
-<div class="nav-label">SYSTEM</div>
-<button class="nav-btn" data-page="settings">⚙ Settings</button>
+ <div class="brand"><div class="brand-mark"><div class="brand-icon">A</div><strong>ADLI FX</strong></div><small>INTEL MARKET TERMINAL</small></div>
+ <div class="nav-label">MENU UTAMA</div>
+ <button class="nav-btn active" data-page="overview" data-ms="◈ Ringkasan" data-en="◈ Overview">◈ Ringkasan</button>
+ <button class="nav-btn" data-page="analysis" data-ms="⌁ Analisis Pasaran" data-en="⌁ Market Analysis">⌁ Analisis Pasaran</button>
+ <button class="nav-btn" data-page="news" data-ms="▣ Kalendar Ekonomi" data-en="▣ Economic Calendar">▣ Kalendar Ekonomi</button>
+ <button class="nav-btn" data-page="history" data-ms="▤ Sejarah Bacaan" data-en="▤ Signal History">▤ Sejarah Bacaan</button>
+ <button class="nav-btn" data-page="planner" data-ms="◉ Kalkulator Matematik" data-en="◉ Math Calculator">◉ Kalkulator Matematik</button>
+ <div class="nav-label">SISTEM</div>
+ <button class="nav-btn" data-page="settings" data-ms="⚙ Tetapan" data-en="⚙ Settings">⚙ Tetapan</button>
 </aside>
-
 <main class="main">
-
 <header class="topbar">
-<div style="display:flex;align-items:center;gap:10px">
-<button class="mobile-menu" id="menuButton">☰</button>
-<h2 id="pageTitle">Overview</h2>
-</div>
-
-<div class="top-right">
-<span class="status">● SYSTEM ONLINE</span>
-<span class="user-email" id="userEmail"></span>
-<button class="logout" id="logoutButton">LOGOUT</button>
-</div>
+ <div style="display:flex;align-items:center;gap:10px"><button class="mobile-menu" id="menuButton">☰</button><h2 id="pageTitle">Ringkasan</h2></div>
+ <div class="top-right"><span class="status">● SYSTEM ONLINE</span><span class="user-email" id="userEmail"></span><button class="lang-btn" id="languageButton">EN</button><button class="logout" id="logoutButton">LOG KELUAR</button></div>
 </header>
 
 <section class="page active" id="overview">
-
-<div class="stats">
-<div class="stat-card"><small>SYMBOL</small><strong class="gold">XAUUSD</strong></div>
-<div class="stat-card"><small>MARKET PRICE</small><strong id="goldPrice">--</strong></div>
-<div class="stat-card"><small>MARKET TREND</small><strong id="marketTrend">WAITING</strong></div>
-<div class="stat-card"><small>DATA STATUS</small><strong id="dataStatus">NO FEED</strong></div>
-</div>
-
-<div class="panel">
-<div class="panel-head">
-<h3>XAUUSD MARKET CHART</h3>
-<div class="toolbar">
-<button class="tf-btn" data-tf="1m">M1</button>
-<button class="tf-btn active" data-tf="5m">M5</button>
-<button class="tf-btn" data-tf="15m">M15</button>
-<button class="tf-btn" data-tf="30m">M30</button>
-<button class="tf-btn" data-tf="1h">H1</button>
-<button class="tf-btn" data-tf="4h">H4</button>
-<button class="tf-btn" data-tf="1d">D1</button>
-<button class="secondary-btn" id="refreshButton">REFRESH</button>
-</div>
-</div>
-<div id="priceChart">
-<div class="chart-watermark">ADLI FX</div>
-<div class="chart-empty" id="chartEmpty">Waiting for market data feed</div>
-</div>
-</div>
-
-<div class="panel">
-<div class="panel-head">
-<h3>ANALYSIS MODE</h3>
-<div class="modebar">
-<button class="mode-btn active" data-mode="scalping">SCALPING</button>
-<button class="mode-btn" data-mode="intraday">INTRADAY</button>
-<button class="mode-btn" data-mode="swing">SWING</button>
-</div>
-</div>
-<div class="notice" id="modeDescription">Short-term educational analysis using the selected chart timeframe.</div>
-</div>
-
-<div class="grid-two">
-
-<div class="panel">
-<div class="panel-head">
-<h3>TECHNICAL MARKET READ</h3>
-<span id="signalUpdated" class="pill">WAITING</span>
-</div>
-
-<div class="signal-box">
-<strong id="aiSignal" class="signal-value">WAIT</strong>
-<div class="signal-sub">RULE-BASED TECHNICAL ESTIMATE · NOT A PREDICTION</div>
-<div class="signal-meter"><div id="signalMeterFill" class="signal-meter-fill"></div></div>
-</div>
-
-<div class="data-row"><span>Model confidence score</span><strong id="signalStrength">--</strong></div>
-<div class="data-row"><span>EMA 9 / 20</span><strong id="signalEMA">--</strong></div>
-<div class="data-row"><span>RSI (14)</span><strong id="signalRSI">--</strong></div>
-<div class="data-row"><span>Timeframe</span><strong id="signalTF">--</strong></div>
-</div>
-
-<div class="panel">
-<h3 class="section-title">ILLUSTRATIVE PRICE LEVELS</h3>
-<div class="data-row"><span>Reference price</span><strong id="entry">--</strong></div>
-<div class="data-row"><span>Risk boundary (SL)</span><strong id="stopLoss">--</strong></div>
-<div class="data-row"><span>Level 1</span><strong id="tp1">--</strong></div>
-<div class="data-row"><span>Level 2</span><strong id="tp2">--</strong></div>
-<div class="data-row"><span>Level 3</span><strong id="tp3">--</strong></div>
-<div class="notice">Levels are chart-study examples only. They are not instructions to trade.</div>
-</div>
-
-</div>
-
-<div class="grid-two">
-
-<div class="panel">
-<h3 class="section-title">SMART MONEY SNAPSHOT</h3>
-<div class="data-row"><span>Market structure</span><strong id="structure">--</strong></div>
-<div class="data-row"><span>Liquidity event</span><strong id="liquidity">--</strong></div>
-<div class="data-row"><span>Fair value gap</span><strong id="fvg">--</strong></div>
-<div class="data-row"><span>Order block proxy</span><strong id="orderBlock">--</strong></div>
-<div class="data-row"><span>Premium / Discount</span><strong id="premiumDiscount">--</strong></div>
-</div>
-
-<div class="panel">
-<h3 class="section-title">MARKET SESSION CLOCK · MALAYSIA</h3>
-<div class="data-row"><span>Asia</span><strong id="sessionAsia">--</strong></div>
-<div class="data-row"><span>London</span><strong id="sessionLondon">--</strong></div>
-<div class="data-row"><span>New York</span><strong id="sessionNewYork">--</strong></div>
-<div class="data-row"><span>Malaysia time</span><strong id="klTime">--</strong></div>
-</div>
-
-</div>
-
-<div class="notice">
-Data is supplied by a third-party provider and may differ from broker prices.
-All indicators are educational technical-analysis estimates, not financial advice or guaranteed outcomes.
-</div>
+ <div class="stats">
+  <div class="stat-card"><small>INSTRUMEN</small><strong class="gold">XAUUSD</strong></div>
+  <div class="stat-card"><small>HARGA DATA</small><strong id="goldPrice">--</strong></div>
+  <div class="stat-card"><small>ARAH PASARAN</small><strong id="marketTrend">MENUNGGU</strong></div>
+  <div class="stat-card"><small>STATUS DATA</small><strong id="dataStatus">NO FEED</strong></div>
+ </div>
+ <div class="panel">
+  <div class="panel-head"><h3>CARTA EMAS · XAUUSD</h3><div class="toolbar">
+   <button class="tf-btn" data-tf="1m">M1</button><button class="tf-btn active" data-tf="5m">M5</button><button class="tf-btn" data-tf="15m">M15</button><button class="tf-btn" data-tf="30m">M30</button><button class="tf-btn" data-tf="1h">H1</button><button class="tf-btn" data-tf="4h">H4</button><button class="tf-btn" data-tf="1d">D1</button><button class="secondary-btn" id="refreshButton">MUAT SEMULA</button>
+  </div></div>
+  <div id="priceChart"><div class="chart-watermark">ADLI FX</div><div class="chart-empty" id="chartEmpty">Menunggu data pasaran…</div></div>
+ </div>
+ <div class="panel">
+  <div class="panel-head"><h3>MOD ANALISIS</h3><div class="modebar"><button class="mode-btn active" data-mode="scalping">SCALPING</button><button class="mode-btn" data-mode="intraday">INTRADAY</button><button class="mode-btn" data-mode="swing">SWING</button></div></div>
+  <div class="notice" id="modeDescription">Bacaan teknikal pendidikan.</div>
+ </div>
+ <div class="grid-two">
+  <div class="panel">
+   <div class="panel-head"><h3>BACAAN TEKNIKAL</h3><span id="signalUpdated" class="pill">MENUNGGU</span></div>
+   <div class="signal-box"><strong id="aiSignal" class="signal-value">HOLD</strong><div class="signal-sub">ANGGARAN TEKNIKAL BERASASKAN PERATURAN · BUKAN RAMALAN</div><div class="signal-meter"><div id="signalMeterFill" class="signal-meter-fill"></div></div></div>
+   <div class="data-row"><span>Skor kekuatan</span><strong id="signalStrength">--</strong></div>
+   <div class="data-row"><span>EMA 9 / 20</span><strong id="signalEMA">--</strong></div>
+   <div class="data-row"><span>RSI (14)</span><strong id="signalRSI">--</strong></div>
+   <div class="data-row"><span>Timeframe</span><strong id="signalTF">--</strong></div>
+  </div>
+  <div class="panel">
+   <h3 class="section-title">PARAS HARGA RUJUKAN</h3>
+   <div class="data-row"><span>Entry rujukan</span><strong id="entry">--</strong></div>
+   <div class="data-row"><span>Stop Loss (SL)</span><strong id="stopLoss">--</strong></div>
+   <div class="data-row"><span>Take Profit 1</span><strong id="tp1">--</strong></div>
+   <div class="data-row"><span>Take Profit 2</span><strong id="tp2">--</strong></div>
+   <div class="data-row"><span>Take Profit 3</span><strong id="tp3">--</strong></div>
+   <div class="notice">Paras ini ialah ilustrasi pengiraan carta untuk pembelajaran sahaja.</div>
+  </div>
+ </div>
+ <div class="grid-two">
+  <div class="panel">
+   <h3 class="section-title">ZON KEMASUKAN SEMULA · ILUSTRASI</h3>
+   <div class="data-row"><span>Zon BUY</span><strong id="buyZone">--</strong></div>
+   <div class="data-row"><span>Status BUY</span><strong id="buyZoneStatus">--</strong></div>
+   <div class="data-row"><span>Zon SELL</span><strong id="sellZone">--</strong></div>
+   <div class="data-row"><span>Status SELL</span><strong id="sellZoneStatus">--</strong></div>
+  </div>
+  <div class="panel">
+   <h3 class="section-title">SESI PASARAN · MYT</h3>
+   <div class="data-row"><span>Asia</span><strong id="sessionAsia">--</strong></div>
+   <div class="data-row"><span>London</span><strong id="sessionLondon">--</strong></div>
+   <div class="data-row"><span>New York</span><strong id="sessionNewYork">--</strong></div>
+   <div class="data-row"><span>Waktu Malaysia</span><strong id="klTime">--</strong></div>
+  </div>
+ </div>
+ <div class="notice">Data harga mungkin berbeza daripada harga broker. Semua bacaan adalah anggaran teknikal pendidikan dan bukan nasihat kewangan atau jaminan hasil.</div>
 </section>
 
 <section class="page" id="analysis">
-<h3 class="section-title">SMART MONEY & MULTI-TIMEFRAME LAB</h3>
-
-<div class="feature-grid">
-<div class="feature"><strong>BOS / CHoCH</strong><small id="bosChoch">Waiting for candles</small></div>
-<div class="feature"><strong>FVG</strong><small id="fvgDetail">Waiting for candles</small></div>
-<div class="feature"><strong>ORDER BLOCK</strong><small id="obDetail">Simplified candle-zone proxy</small></div>
-<div class="feature"><strong>LIQUIDITY</strong><small id="liqDetail">Waiting for candles</small></div>
-<div class="feature"><strong>PREMIUM / DISCOUNT</strong><small id="pdDetail">Waiting for candles</small></div>
-<div class="feature"><strong>VOLATILITY (ATR)</strong><small id="atrDetail">Waiting for candles</small></div>
-</div>
-
-<div class="panel" style="margin-top:16px">
-<div class="panel-head">
-<h3>MULTI TIMEFRAME SNAPSHOT</h3>
-<div class="toolbar">
-<span id="mtfUpdated" class="pill">NOT LOADED</span>
-<button class="secondary-btn" id="mtfRefresh">UPDATE MTF</button>
-</div>
-</div>
-
-<div class="notice">MTF update is manual to help conserve the Twelve Data free API quota. Cached readings are labelled with their age.</div>
-
-<div class="data-row"><span>M1</span><strong id="mtf1m">NOT LOADED</strong></div>
-<div class="data-row"><span>M5</span><strong id="mtf5m">NOT LOADED</strong></div>
-<div class="data-row"><span>M15</span><strong id="mtf15m">NOT LOADED</strong></div>
-<div class="data-row"><span>M30</span><strong id="mtf30m">NOT LOADED</strong></div>
-<div class="data-row"><span>H1</span><strong id="mtf1h">NOT LOADED</strong></div>
-<div class="data-row"><span>H4</span><strong id="mtf4h">NOT LOADED</strong></div>
-<div class="data-row"><span>D1</span><strong id="mtf1d">NOT LOADED</strong></div>
-</div>
+ <h3 class="section-title">MAKMAL ANALISIS & MULTI-TIMEFRAME</h3>
+ <div class="feature-grid">
+  <div class="feature"><strong>STRUKTUR PASARAN</strong><small id="bosChoch">Menunggu data</small></div>
+  <div class="feature"><strong>FAIR VALUE GAP</strong><small id="fvgDetail">Menunggu data</small></div>
+  <div class="feature"><strong>ORDER BLOCK PROXY</strong><small id="obDetail">Menunggu data</small></div>
+  <div class="feature"><strong>LIQUIDITY</strong><small id="liqDetail">Menunggu data</small></div>
+  <div class="feature"><strong>PREMIUM / DISCOUNT</strong><small id="pdDetail">Menunggu data</small></div>
+  <div class="feature"><strong>VOLATILITY · ATR</strong><small id="atrDetail">Menunggu data</small></div>
+ </div>
+ <div class="panel" style="margin-top:16px">
+  <div class="panel-head"><h3>BACAAN PELBAGAI TIMEFRAME</h3><div class="toolbar"><span id="mtfUpdated" class="pill">BELUM DIMUAT</span><button class="secondary-btn" id="mtfRefresh">KEMAS KINI MTF</button></div></div>
+  <div class="notice">Kemas kini manual untuk menjimatkan kuota Twelve Data. Bacaan cache akan menunjukkan umur data.</div>
+  <div class="data-row"><span>M1</span><strong id="mtf1m">BELUM DIMUAT</strong></div><div class="data-row"><span>M5</span><strong id="mtf5m">BELUM DIMUAT</strong></div><div class="data-row"><span>M15</span><strong id="mtf15m">BELUM DIMUAT</strong></div><div class="data-row"><span>M30</span><strong id="mtf30m">BELUM DIMUAT</strong></div><div class="data-row"><span>H1</span><strong id="mtf1h">BELUM DIMUAT</strong></div><div class="data-row"><span>H4</span><strong id="mtf4h">BELUM DIMUAT</strong></div><div class="data-row"><span>D1</span><strong id="mtf1d">BELUM DIMUAT</strong></div>
+ </div>
 </section>
 
 <section class="page" id="news">
-<h3 class="section-title">NEWS INTELLIGENCE & MARKET SESSIONS</h3>
-
-<div class="panel">
-<div class="panel-head">
-<h3>ECONOMIC NEWS FEED</h3>
-<span class="pill warn" id="newsStatus">SOURCE NOT CONNECTED</span>
-</div>
-
-<div class="notice">
-Tiada penyedia berita atau kalendar ekonomi disambungkan dalam konfigurasi semasa.
-Panel ini tidak akan mereka-reka tajuk berita, masa atau impak.
-Gunakan sumber asal di bawah dan semak masa serta zon waktu pada laman penyedia.
-</div>
-
-<div class="data-row">
-<span>Forex Factory calendar</span>
-<a class="news-link" href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">Open calendar ↗</a>
-</div>
-
-<div class="data-row">
-<span>Trading Economics calendar</span>
-<a class="news-link" href="https://tradingeconomics.com/calendar" target="_blank" rel="noopener">Open calendar ↗</a>
-</div>
-
-<div class="data-row">
-<span>Federal Reserve</span>
-<a class="news-link" href="https://www.federalreserve.gov/newsevents.htm" target="_blank" rel="noopener">Official updates ↗</a>
-</div>
-</div>
-
-<div class="panel">
-<h3 class="section-title">SESSION STATUS</h3>
-<div class="data-row"><span>Asia (approx. 08:00–17:00 MYT)</span><strong id="newsAsia">--</strong></div>
-<div class="data-row"><span>London (DST-aware estimate)</span><strong id="newsLondon">--</strong></div>
-<div class="data-row"><span>New York (DST-aware estimate)</span><strong id="newsNY">--</strong></div>
-<div class="notice">Session windows are approximate reference hours, not exchange opening guarantees. London and New York shift with daylight-saving time.</div>
-</div>
+ <h3 class="section-title">KALENDAR EKONOMI & BERITA</h3>
+ <div class="panel">
+  <div class="panel-head"><h3>KALENDAR EKONOMI · MYT</h3><span class="pill warn" id="newsStatus">SUMBER BELUM DISAMBUNG</span></div>
+  <div class="calendar-grid">
+   <div class="calendar-stat"><small>HARI INI</small><strong id="calendarToday">--</strong></div>
+   <div class="calendar-stat"><small>ACARA HARI INI</small><strong id="calendarCount">--</strong></div>
+   <div class="calendar-stat"><small>IMPAK TINGGI USD</small><strong id="calendarHigh">--</strong></div>
+   <div class="calendar-stat"><small>DATA TERKINI</small><strong id="calendarUpdated">--</strong></div>
+  </div>
+  <div class="toolbar" style="margin:12px 0"><button class="tf-btn active" data-calendar-filter="today">Hari ini</button><button class="tf-btn" data-calendar-filter="tomorrow">Esok</button><button class="tf-btn" data-calendar-filter="week">Minggu ini</button></div>
+  <div class="calendar-state" id="calendarMessage">Kalendar ekonomi belum disambungkan. Tiada acara, ramalan, data sebenar atau countdown akan direka. Sambungkan penyedia kalendar melalui backend sebelum data langsung dipaparkan.</div>
+  <div class="table-wrap" style="margin-top:14px"><table class="calendar-table"><thead><tr><th>MASA MYT</th><th>MATA WANG</th><th>ACARA</th><th>IMPAK</th><th>FORECAST</th><th>PREVIOUS</th><th>ACTUAL</th><th>STATUS</th></tr></thead><tbody id="calendarBody"><tr><td colspan="8" class="empty">Sumber kalendar belum disambungkan.</td></tr></tbody></table></div>
+ </div>
+ <div class="panel"><h3 class="section-title">STATUS SESI PASARAN</h3><div class="data-row"><span>Asia</span><strong id="newsAsia">--</strong></div><div class="data-row"><span>London</span><strong id="newsLondon">--</strong></div><div class="data-row"><span>New York</span><strong id="newsNY">--</strong></div><div class="notice">Waktu sesi ialah anggaran dan berubah mengikut daylight-saving time.</div></div>
 </section>
 
 <section class="page" id="history">
-<div class="panel">
-<div class="panel-head">
-<h3 class="section-title" style="margin:0">LOCAL ANALYSIS HISTORY</h3>
-<button class="secondary-btn" id="clearHistory">CLEAR HISTORY</button>
-</div>
-
-<div class="notice">Records are stored only in this browser on this device. They are not synced to Supabase.</div>
-
-<div class="table-wrap">
-<table>
-<thead>
-<tr><th>TIME</th><th>MODE</th><th>TF</th><th>READING</th><th>SCORE</th><th>PRICE</th></tr>
-</thead>
-<tbody id="historyBody">
-<tr><td colspan="6" class="empty">No analysis records yet.</td></tr>
-</tbody>
-</table>
-</div>
-</div>
+ <div class="panel"><div class="panel-head"><h3 class="section-title" style="margin:0">SEJARAH BACAAN TEKNIKAL</h3><button class="secondary-btn" id="clearHistory">PADAM SEJARAH</button></div><div class="notice">Rekod disimpan dalam pelayar peranti ini sahaja.</div><div class="table-wrap"><table><thead><tr><th>MASA</th><th>MOD</th><th>TF</th><th>BACAAN</th><th>SKOR</th><th>HARGA</th></tr></thead><tbody id="historyBody"><tr><td colspan="6" class="empty">Belum ada rekod.</td></tr></tbody></table></div></div>
 </section>
 
 <section class="page" id="planner">
-<div class="panel">
-<h3 class="section-title">HYPOTHETICAL RISK BUDGET CALCULATOR</h3>
-
-<div class="planner-grid">
-<div>
-<label>Example account balance</label>
-<input type="number" id="balance" value="1000" min="0">
-</div>
-<div>
-<label>Example percentage (%)</label>
-<input type="number" id="risk" value="1" min="0" max="100" step=".1">
-</div>
-</div>
-
-<button class="primary-btn" id="calculateRisk">CALCULATE EXAMPLE</button>
-
-<div class="result" id="riskResult">Enter values to calculate a hypothetical amount.</div>
-
-<div class="notice" style="margin-top:14px">
-For maths education only. This does not calculate position size, leverage, or recommend taking financial risk.
-</div>
-</div>
+ <div class="panel"><h3 class="section-title">KALKULATOR PERATUS MATEMATIK</h3><div class="planner-grid"><div><label>Nilai contoh</label><input type="number" id="balance" value="1000" min="0"></div><div><label>Peratus (%)</label><input type="number" id="risk" value="1" min="0" max="100" step=".1"></div></div><button class="primary-btn" id="calculateRisk">KIRA CONTOH</button><div class="result" id="riskResult">Masukkan nilai untuk pengiraan matematik.</div><div class="notice" style="margin-top:14px">Untuk pembelajaran matematik sahaja. Bukan pengiraan saiz posisi atau cadangan mengambil risiko kewangan.</div></div>
 </section>
 
 <section class="page" id="settings">
-<div class="panel">
-<h3 class="section-title">SYSTEM & ACCOUNT SETTINGS</h3>
-
-<div class="data-row"><span>Application</span><strong>ADLI FX INTEL INDICATOR</strong></div>
-<div class="data-row"><span>Engine</span><strong>V3 PREMIUM · RULE-BASED</strong></div>
-<div class="data-row"><span>Market</span><strong>XAU/USD</strong></div>
-<div class="data-row"><span>Account</span><strong id="settingsEmail">--</strong></div>
-<div class="data-row"><span>Subscription</span><strong id="subscriptionStatus">CHECKING</strong></div>
-
-<div class="notice" id="subscriptionMessage" style="margin-top:14px">
-Subscription status has not been checked yet.
-</div>
-
-<div class="data-row"><span>Data refresh</span><strong>5 minutes · selected timeframe</strong></div>
-<div class="data-row"><span>MTF refresh</span><strong>Manual (quota-saving)</strong></div>
-</div>
+ <div class="panel"><h3 class="section-title">TETAPAN SISTEM & AKAUN</h3><div class="data-row"><span>Aplikasi</span><strong>ADLI FX INTEL</strong></div><div class="data-row"><span>Enjin</span><strong>V4 PREMIUM · RULE-BASED</strong></div><div class="data-row"><span>Instrumen</span><strong>XAU/USD</strong></div><div class="data-row"><span>Akaun</span><strong id="settingsEmail">--</strong></div><div class="data-row"><span>Subscription</span><strong id="subscriptionStatus">CHECKING</strong></div><div class="notice" id="subscriptionMessage" style="margin-top:14px">Status subscription belum diperiksa.</div><div class="data-row"><span>Refresh harga</span><strong>5 minit</strong></div><div class="data-row"><span>Refresh MTF</span><strong>Manual</strong></div><div class="data-row"><span>Bahasa</span><strong id="languageStatus">Bahasa Melayu</strong></div></div>
 </section>
-
 </main>
 </div>
 </section>
 
 <script>
-(function () {
+(function(){
 "use strict";
-
-const authScreen = document.getElementById("authScreen");
-const application = document.getElementById("application");
-const authForm = document.getElementById("authForm");
-const authMessage = document.getElementById("authMessage");
-
-let registerMode = false;
-let checkingAccount = false;
-
-function message(text) {
-    authMessage.textContent = text || "";
-}
-
-function setSubscriptionStatus(status, detail, color) {
-    const s = document.getElementById("subscriptionStatus");
-    const m = document.getElementById("subscriptionMessage");
-
-    if (s) {
-        s.textContent = status;
-        s.style.color = color || "var(--gold)";
-    }
-
-    if (m) m.textContent = detail || "";
-}
-
-function showLogin() {
-    authScreen.style.display = "flex";
-    application.style.display = "none";
-}
-
-function showApplication(user) {
-    authScreen.style.display = "none";
-    application.style.display = "block";
-
-    document.getElementById("userEmail").textContent = user.email || "";
-    document.getElementById("settingsEmail").textContent = user.email || "";
-
-    if (window.ADLI_APP && window.ADLI_APP.resizeChart) {
-        setTimeout(function () {
-            window.ADLI_APP.resizeChart();
-        }, 200);
-    }
-}
-
-document.getElementById("switchText").addEventListener("click", function () {
-    registerMode = !registerMode;
-
-    document.getElementById("authTitle").textContent =
-        registerMode ? "Create Account" : "Member Login";
-
-    document.getElementById("authSubmit").textContent =
-        registerMode ? "REGISTER" : "LOGIN";
-
-    document.getElementById("nameField").classList.toggle("hidden", !registerMode);
-    document.getElementById("phoneField").classList.toggle("hidden", !registerMode);
-
-    document.getElementById("switchText").textContent =
-        registerMode ? "Back to login" : "Create new account";
-
-    document.getElementById("fullName").required = registerMode;
-    document.getElementById("phone").required = registerMode;
-
-    document.getElementById("password").autocomplete =
-        registerMode ? "new-password" : "current-password";
-
-    message("");
-});
-
-authForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
-
-    if (!window.ADLI_AUTH) {
-        message("Authentication is not configured. Check config.js and auth.js.");
-        return;
-    }
-
-    const button = document.getElementById("authSubmit");
-    button.disabled = true;
-    button.textContent = "PLEASE WAIT...";
-    message("");
-
-    try {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-
-        if (registerMode) {
-            const result = await window.ADLI_AUTH.register(
-                document.getElementById("fullName").value.trim(),
-                document.getElementById("phone").value.trim(),
-                email,
-                password
-            );
-
-            if (result && result.user && result.session) {
-                await openAccount(result.user);
-            } else if (result && result.user) {
-                message("Account created. Please confirm your email before logging in.");
-            } else {
-                message("Registration submitted. Check your email.");
-            }
-
-        } else {
-            const result = await window.ADLI_AUTH.login(email, password);
-
-            let user = result && result.user ? result.user : null;
-
-            if (!user) {
-                user = await window.ADLI_AUTH.getUser();
-            }
-
-            if (!user) {
-                throw new Error("Login completed but user session was not found.");
-            }
-
-            await openAccount(user);
-        }
-
-    } catch (error) {
-        console.error("ADLI LOGIN ERROR:", error);
-        message(error.message || "Login failed. Please try again.");
-    } finally {
-        button.disabled = false;
-        button.textContent = registerMode ? "REGISTER" : "LOGIN";
-    }
-});
-
-async function openAccount(user) {
-    if (checkingAccount) return;
-
-    checkingAccount = true;
-
-    showApplication(user);
-
-    setSubscriptionStatus(
-        "CHECKING",
-        "Checking subscription record...",
-        "var(--gold)"
-    );
-
-    try {
-        const sub = await window.ADLI_AUTH.getSubscription();
-
-        if (!sub) {
-            setSubscriptionStatus(
-                "NO RECORD",
-                "No subscription record found for this account.",
-                "var(--red)"
-            );
-            return;
-        }
-
-        const status = String(sub.status || "").trim().toLowerCase();
-
-        if (status !== "active") {
-            setSubscriptionStatus(
-                status.toUpperCase() || "PENDING",
-                "Subscription is not active.",
-                "var(--gold)"
-            );
-            return;
-        }
-
-        const access = await window.ADLI_AUTH.checkAccess();
-
-        if (!access || access.active !== true) {
-            setSubscriptionStatus(
-                "ACCESS NOT VERIFIED",
-                "The subscription RPC did not confirm access.",
-                "var(--red)"
-            );
-            return;
-        }
-
-        setSubscriptionStatus(
-            "ACTIVE",
-            "Subscription verified successfully.",
-            "var(--green)"
-        );
-
-    } catch (error) {
-        console.error("ADLI ACCOUNT ERROR:", error);
-
-        setSubscriptionStatus(
-            "CHECK ERROR",
-            error.message || "Unable to verify subscription.",
-            "var(--red)"
-        );
-    } finally {
-        checkingAccount = false;
-    }
-}
-
-document.getElementById("logoutButton").addEventListener("click", async function () {
-    try {
-        await window.ADLI_AUTH.logout();
-        showLogin();
-        message("You have logged out.");
-    } catch (error) {
-        alert(error.message || "Logout failed.");
-    }
-});
-
-document.querySelectorAll(".nav-btn").forEach(function (button) {
-    button.addEventListener("click", function () {
-        const target = document.getElementById(button.dataset.page);
-        if (!target) return;
-
-        document.querySelectorAll(".nav-btn").forEach(function (item) {
-            item.classList.remove("active");
-        });
-
-        document.querySelectorAll(".page").forEach(function (page) {
-            page.classList.remove("active");
-        });
-
-        button.classList.add("active");
-        target.classList.add("active");
-
-        document.getElementById("pageTitle").textContent =
-            button.textContent.trim();
-
-        document.getElementById("sidebar").classList.remove("open");
-
-        if (window.ADLI_APP && window.ADLI_APP.resizeChart) {
-            setTimeout(function () {
-                window.ADLI_APP.resizeChart();
-            }, 100);
-        }
-    });
-});
-
-document.getElementById("menuButton").addEventListener("click", function () {
-    document.getElementById("sidebar").classList.toggle("open");
-});
-
-document.getElementById("calculateRisk").addEventListener("click", function () {
-    const balance = Number(document.getElementById("balance").value);
-    const percentage = Number(document.getElementById("risk").value);
-    const output = document.getElementById("riskResult");
-
-    if (!Number.isFinite(balance) ||
-        !Number.isFinite(percentage) ||
-        balance <= 0 ||
-        percentage < 0 ||
-        percentage > 100) {
-        output.textContent =
-            "Enter valid values. Percentage must be between 0 and 100.";
-        return;
-    }
-
-    output.textContent =
-        "Hypothetical amount: " +
-        (balance * percentage / 100).toFixed(2) +
-        " (same currency as the balance).";
-});
-
-async function restoreSession() {
-    try {
-        if (!window.ADLI_AUTH) {
-            showLogin();
-            message("Supabase is not ready. Check config.js and auth.js.");
-            return;
-        }
-
-        const session = await window.ADLI_AUTH.getSession();
-
-        if (session && session.user) {
-            await openAccount(session.user);
-        } else {
-            showLogin();
-        }
-
-    } catch (error) {
-        console.error("ADLI SESSION ERROR:", error);
-        showLogin();
-        message(error.message || "Could not restore login session.");
-    }
-}
-
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", restoreSession);
-} else {
-    restoreSession();
-}
-
+const authScreen=document.getElementById("authScreen"),application=document.getElementById("application"),authForm=document.getElementById("authForm"),authMessage=document.getElementById("authMessage");
+let registerMode=false,checkingAccount=false;
+function message(t){authMessage.textContent=t||""}
+function setSubscriptionStatus(s,d,c){const a=document.getElementById("subscriptionStatus"),b=document.getElementById("subscriptionMessage");if(a){a.textContent=s;a.style.color=c||"var(--gold)"}if(b)b.textContent=d||""}
+function showLogin(){authScreen.style.display="flex";application.style.display="none"}
+function showApplication(user){authScreen.style.display="none";application.style.display="block";document.getElementById("userEmail").textContent=user.email||"";document.getElementById("settingsEmail").textContent=user.email||"";if(window.ADLI_APP&&window.ADLI_APP.resizeChart)setTimeout(window.ADLI_APP.resizeChart,200)}
+document.getElementById("switchText").addEventListener("click",function(){registerMode=!registerMode;document.getElementById("authTitle").textContent=registerMode?"Daftar Akaun":"Log Masuk Ahli";document.getElementById("authSubmit").textContent=registerMode?"DAFTAR":"LOG MASUK";document.getElementById("nameField").classList.toggle("hidden",!registerMode);document.getElementById("phoneField").classList.toggle("hidden",!registerMode);document.getElementById("switchText").textContent=registerMode?"Kembali ke log masuk":"Daftar akaun baharu";document.getElementById("fullName").required=registerMode;document.getElementById("phone").required=registerMode;document.getElementById("password").autocomplete=registerMode?"new-password":"current-password";message("")});
+authForm.addEventListener("submit",async function(e){e.preventDefault();if(!window.ADLI_AUTH){message("Authentication belum tersedia. Semak config.js dan auth.js.");return}const b=document.getElementById("authSubmit");b.disabled=true;b.textContent="SILA TUNGGU…";message("");try{const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;if(registerMode){const r=await window.ADLI_AUTH.register(document.getElementById("fullName").value.trim(),document.getElementById("phone").value.trim(),email,password);if(r&&r.user&&r.session)await openAccount(r.user);else if(r&&r.user)message("Akaun berjaya dihantar. Sahkan email sebelum log masuk.");else message("Pendaftaran dihantar. Semak email.")}else{const r=await window.ADLI_AUTH.login(email,password);let u=r&&r.user?r.user:null;if(!u)u=await window.ADLI_AUTH.getUser();if(!u)throw Error("Sesi pengguna tidak ditemui.");await openAccount(u)}}catch(e){console.error("ADLI LOGIN ERROR",e);message(e.message||"Log masuk gagal.")}finally{b.disabled=false;b.textContent=registerMode?"DAFTAR":"LOG MASUK"}});
+async function openAccount(user){if(checkingAccount)return;checkingAccount=true;showApplication(user);setSubscriptionStatus("CHECKING","Memeriksa rekod subscription…","var(--gold)");try{const sub=await window.ADLI_AUTH.getSubscription();if(!sub){setSubscriptionStatus("NO RECORD","Tiada rekod subscription untuk akaun ini.","var(--red)");return}const status=String(sub.status||"").trim().toLowerCase();if(status!=="active"){setSubscriptionStatus(status.toUpperCase()||"PENDING","Subscription belum aktif.","var(--gold)");return}const access=await window.ADLI_AUTH.checkAccess();if(!access||access.active!==true){setSubscriptionStatus("ACCESS NOT VERIFIED","Akses subscription belum disahkan.","var(--red)");return}setSubscriptionStatus("ACTIVE","Subscription berjaya disahkan.","var(--green)")}catch(e){console.error("ADLI ACCOUNT ERROR",e);setSubscriptionStatus("CHECK ERROR",e.message||"Tidak dapat mengesahkan subscription.","var(--red)")}finally{checkingAccount=false}}
+document.getElementById("logoutButton").addEventListener("click",async function(){try{await window.ADLI_AUTH.logout();showLogin();message("Anda telah log keluar.")}catch(e){alert(e.message||"Log keluar gagal.")}});
+document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",function(){const t=document.getElementById(b.dataset.page);if(!t)return;document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));b.classList.add("active");t.classList.add("active");document.getElementById("pageTitle").textContent=b.dataset[window.ADLI_LANG==="en"?"en":"ms"].replace(/^[◈⌁▣▤◉⚙]\s*/,"");document.getElementById("sidebar").classList.remove("open");if(window.ADLI_APP&&window.ADLI_APP.resizeChart)setTimeout(window.ADLI_APP.resizeChart,100)}));
+document.getElementById("menuButton").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
+document.getElementById("calculateRisk").addEventListener("click",function(){const a=Number(document.getElementById("balance").value),p=Number(document.getElementById("risk").value),o=document.getElementById("riskResult");if(!Number.isFinite(a)||!Number.isFinite(p)||a<=0||p<0||p>100){o.textContent="Masukkan nilai sah. Peratus mestilah antara 0 hingga 100.";return}o.textContent="Nilai contoh: "+(a*p/100).toFixed(2)+" (mata wang yang sama)."});
+async function restoreSession(){try{if(!window.ADLI_AUTH){showLogin();message("Supabase belum tersedia. Semak config.js dan auth.js.");return}const s=await window.ADLI_AUTH.getSession();if(s&&s.user)await openAccount(s.user);else showLogin()}catch(e){console.error("ADLI SESSION ERROR",e);showLogin();message(e.message||"Tidak dapat memulihkan sesi.")}}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",restoreSession);else restoreSession();
 })();
 </script>
-
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
