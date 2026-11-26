@@ -103,27 +103,36 @@
 
         // CHECK ACTIVE ACCESS
         async checkAccess() {
-            const user = await this.getUser();
+    const user = await this.getUser();
 
-            if (!user) {
-                return {
-                    loggedIn: false,
-                    active: false
-                };
-            }
+    if (!user) {
+        return {
+            loggedIn: false,
+            active: false
+        };
+    }
 
-            const { data, error } = await client.rpc(
-                "has_active_subscription"
-            );
+    const { data, error } = await client.rpc(
+        "has_active_subscription"
+    );
 
-            if (error) throw error;
+    console.log("ADLI SUBSCRIPTION CHECK:", {
+        data,
+        error,
+        userId: user.id
+    });
 
-            return {
-                loggedIn: true,
-                active: data === true,
-                user: user
-            };
-        },
+    if (error) {
+        console.error("SUBSCRIPTION RPC ERROR:", error);
+        throw error;
+    }
+
+    return {
+        loggedIn: true,
+        active: data === true,
+        user: user
+    };
+},
 
         // LISTEN TO AUTH CHANGES
         onAuthChange(callback) {
